@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login, Signup, Dashboard, IntakeForm, Matches, ApplicationTracker, Profile } from './pages';
 import { Layout } from './components';
+import { ApplicationProvider } from './context/ApplicationContext';
 import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ApplicationProvider>
+      <BrowserRouter>
+        <Routes>
         {/* Auth routes without layout */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -21,6 +23,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ApplicationProvider>
   );
 }
 

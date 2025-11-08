@@ -1,4 +1,11 @@
+import { useNavigate } from 'react-router-dom';
+import { useApplications } from '../../context/ApplicationContext';
+
 export const Dashboard = () => {
+  const navigate = useNavigate();
+  const { applications } = useApplications();
+  const successfulApplications = applications.filter(app => app.status === 'success');
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
@@ -79,23 +86,56 @@ export const Dashboard = () => {
               <button className="text-sm text-primary-600 hover:text-primary-700 font-semibold">View All</button>
             </div>
             
-            <div className="text-center py-16">
-              <div className="mx-auto h-20 w-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
-                <svg className="h-10 w-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+            {successfulApplications.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="mx-auto h-20 w-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                  <svg className="h-10 w-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-surface-900 civic-heading mb-3">Ready to get started?</h3>
+                <p className="text-lg text-surface-600 civic-text max-w-md mx-auto mb-8">
+                  Let our AI assistant help you find and apply for grants that match your organization perfectly.
+                </p>
+                <button 
+                  onClick={() => navigate('/matches')}
+                  className="group inline-flex items-center px-8 py-4 bg-gradient-civic text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
+                >
+                  <svg className="-ml-1 mr-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Start Your First Application
+                </button>
               </div>
-              <h3 className="text-2xl font-bold text-surface-900 civic-heading mb-3">Ready to get started?</h3>
-              <p className="text-lg text-surface-600 civic-text max-w-md mx-auto mb-8">
-                Let our AI assistant help you find and apply for grants that match your organization perfectly.
-              </p>
-              <button className="group inline-flex items-center px-8 py-4 bg-gradient-civic text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                <svg className="-ml-1 mr-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Start Your First Application
-              </button>
-            </div>
+            ) : (
+              <div className="space-y-4 py-4">
+                {successfulApplications.slice(0, 5).map((app) => (
+                  <div key={app.id} className="flex items-start gap-4 p-4 bg-surface-50 rounded-xl hover:bg-surface-100 transition-colors duration-200">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-surface-900 truncate">{app.grantTitle}</h4>
+                      <p className="text-xs text-surface-600 mt-0.5">{app.funder}</p>
+                      <p className="text-xs text-surface-500 mt-1">{app.amount}</p>
+                    </div>
+                    <div className="text-xs text-surface-400">
+                      {new Date(app.timestamp).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+                {successfulApplications.length > 5 && (
+                  <button 
+                    onClick={() => navigate('/applications')}
+                    className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-semibold py-2"
+                  >
+                    View all {successfulApplications.length} applications →
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
