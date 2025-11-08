@@ -9,65 +9,62 @@ export const Dashboard = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-10">
         {/* Stat Card 1 */}
-        <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 border border-primary-100/50 hover:-translate-y-1">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-shrink-0 p-4 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-surface-900 civic-heading mb-1">12</div>
-                <div className="text-sm font-medium text-surface-600">Available Grants</div>
-              </div>
+        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+          <div className="flex items-start justify-between">
+            <div className="p-3 bg-primary-100 rounded-xl">
+              <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
+            <div className="text-3xl font-bold text-surface-900">12</div>
+          </div>
+          <div className="flex items-end justify-between">
             <div className="flex items-center text-sm">
-              <span className="text-success font-semibold">↗ +3</span>
+              <svg className="w-4 h-4 mr-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              <span className="text-green-600 font-semibold">+3</span>
               <span className="text-surface-500 ml-1">this week</span>
             </div>
+            <div className="text-right text-sm font-medium text-surface-600">Available Grants</div>
           </div>
         </div>
 
         {/* Stat Card 2 */}
-        <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 border border-secondary-100/50 hover:-translate-y-1">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-shrink-0 p-4 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-surface-900 civic-heading mb-1">4</div>
-                <div className="text-sm font-medium text-surface-600">Active Applications</div>
-              </div>
+        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+          <div className="flex items-start justify-between">
+            <div className="p-3 bg-secondary-100 rounded-xl">
+              <svg className="h-6 w-6 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
-            <div className="flex items-center text-sm">
-              <span className="text-accent-600 font-semibold">2</span>
-              <span className="text-surface-500 ml-1">under review</span>
+            <div className="text-3xl font-bold text-surface-900">4</div>
+          </div>
+          <div className="flex items-end justify-between">
+            <div className="flex items-center text-sm text-surface-600">
+              <span className="font-semibold">2</span>
+              <span className="ml-1">under review</span>
             </div>
+            <div className="text-right text-sm font-medium text-surface-600">Active Applications</div>
           </div>
         </div>
 
         {/* Stat Card 3 */}
-        <div className="group bg-white/80 backdrop-blur-sm overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 border border-accent-100/50 hover:-translate-y-1">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-shrink-0 p-4 bg-gradient-to-br from-accent-500 to-accent-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-surface-900 civic-heading mb-1">$125K</div>
-                <div className="text-sm font-medium text-surface-600">Potential Funding</div>
-              </div>
+        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+          <div className="flex items-start justify-between">
+            <div className="p-3 bg-accent-100 rounded-xl">
+              <svg className="h-6 w-6 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-            <div className="flex items-center text-sm">
-              <span className="text-success font-semibold">$45K</span>
-              <span className="text-surface-500 ml-1">high probability</span>
+            <div className="text-3xl font-bold text-surface-900">$125K</div>
+          </div>
+          <div className="flex items-end justify-between">
+            <div className="flex items-center text-sm text-surface-600">
+              <span className="font-semibold">$45K</span>
+              <span className="ml-1">high probability</span>
             </div>
+            <div className="text-right text-sm font-medium text-surface-600">Potential Funding</div>
           </div>
         </div>
       </div>
