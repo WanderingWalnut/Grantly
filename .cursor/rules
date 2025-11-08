@@ -1,0 +1,143 @@
+# AI-Powered Grant Assistant - Development Rules
+
+## Project Overview
+
+We're building an AI-powered grant assistant that helps non-profits access government funding more easily. Many community organizations drive real social impact but lack the time or resources to navigate complex grant portals. Our tool:
+
+- Generates tailored application responses from a nonprofit's profile using LLMs
+- Automatically fills official grant forms using Browserbase (cloud browser automation)
+- Lets users review and submit final applications
+- Augments human effort by freeing small organizations to focus on service delivery instead of paperwork
+
+**Mission**: Support vulnerable and under-resourced groups through better funding access, strengthening financial resilience of community organizations.
+
+## Tech Stack
+
+### Backend (`server/`)
+
+- **Framework**: FastAPI
+- **Language**: Python 3.x
+- **Architecture**: Modular, service-oriented, scalable
+- **Key Services**: LLM integration, Browserbase automation, database management
+
+### Frontend (`client/`)
+
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Architecture**: Feature-based, component-driven
+- **State Management**: Context API (consider adding React Query for server state)
+
+## Folder Structure Conventions
+
+### Backend (`server/app/`)
+
+- `core/` - Configuration and base settings
+- `db/` - Database models, sessions, migrations
+- `models/` - SQLAlchemy/ORM models (nonprofit, grant, application)
+- `schemas/` - Pydantic schemas for request/response validation
+- `services/` - Business logic (llm_service, browserbase_service)
+- `routers/` - API endpoints organized by domain (nonprofits, grants, applications, browserbase)
+- `tests/` - Test files
+
+### Frontend (`client/src/`)
+
+- `components/` - Reusable UI components
+  - `common/` - Shared components (buttons, inputs, cards)
+  - `layout/` - Layout components (header, sidebar, footer)
+  - `forms/` - Form-specific components
+- `features/` - Feature modules (nonprofits, grants, applications)
+- `pages/` - Route-level page components (home, dashboard, grant-form, review-session)
+- `hooks/` - Custom React hooks
+- `context/` - React Context providers
+- `services/` - API client functions
+- `utils/` - Helper functions, formatters, validators
+- `styles/` - Global styles, themes
+- `types/` - TypeScript type definitions
+
+## Naming Conventions
+
+- **Folders**: kebab-case (e.g., `grant-form/`, `review-session/`)
+- **Files**: kebab-case for folders, PascalCase for React components, camelCase for utilities
+- **Python**: snake_case for functions/variables, PascalCase for classes
+- **TypeScript**: camelCase for variables/functions, PascalCase for types/interfaces/components
+
+## Domain Models
+
+### Core Entities
+
+1. **Nonprofit Profile**: Organization details, mission, programs, financial info
+2. **Grant Metadata**: Grant opportunities, requirements, deadlines, eligibility
+3. **Application**: Generated responses, form data, submission status, Browserbase session links
+
+### Key Workflows
+
+1. **Profile Creation**: User creates/updates nonprofit profile
+2. **Grant Discovery**: System matches grants to nonprofit profile
+3. **Answer Generation**: LLM generates tailored application answers from profile
+4. **Form Prefilling**: Browserbase automates form filling with generated answers
+5. **Review & Submit**: User reviews prefilled form and submits
+
+## Development Principles
+
+### File Size & Organization
+
+- **Keep files small and focused** - Aim for <200 lines per file when possible
+- Split large files into smaller modules
+- One main responsibility per file
+- Extract reusable logic into separate utilities/hooks/services
+
+### Backend
+
+- Use Pydantic schemas for API validation (keep schemas concise)
+- Keep business logic in services, not routers
+- Use dependency injection for database sessions
+- Basic error handling - focus on functionality first
+- Follow RESTful API conventions
+- Use environment variables for API keys (basic security)
+
+### Frontend
+
+- Use TypeScript - `any` is acceptable for rapid prototyping if needed
+- Create reusable components in `components/`
+- Keep feature-specific code in `features/`
+- Use custom hooks for shared logic
+- Implement basic loading and error states
+- Use barrel exports (index.ts) for clean imports
+- Keep components under 150 lines - extract sub-components if needed
+
+### API Integration
+
+- Centralize API calls in `services/` directory
+- Basic error handling patterns
+- TypeScript types for API responses (can be minimal)
+- Handle loading, success, and error states
+
+## Browserbase Integration
+
+- Store Browserbase session URLs for review
+- Handle basic session errors
+- Provide clear feedback on automation status
+- Keep Browserbase service file focused and small
+
+## LLM Integration
+
+- Generate context-aware responses from nonprofit profiles
+- Keep LLM service file modular and focused
+- Provide options to edit/refine generated answers
+- Simple tracking of AI-generated vs. user-edited content
+
+## User Experience
+
+- Design for non-technical users (nonprofit staff)
+- Provide clear progress indicators
+- Show helpful error messages
+- Make the review process intuitive
+- Focus on core functionality over polish
+
+## Code Quality (Hackathon Focus)
+
+- Write clear, functional code
+- Add comments for complex logic only
+- Keep functions focused and single-purpose
+- Don't over-engineer - prioritize working features
+- Reuse code when it makes sense, but don't abstract prematurely
