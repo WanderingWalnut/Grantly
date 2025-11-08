@@ -17,12 +17,21 @@ SAMPLES_PATH = (
 
 
 class GrantFinderService:
+    """Orchestrates grant discovery across mock and live Perplexity-backed modes."""
+
     def __init__(self, settings: Settings):
         self.settings = settings
 
     async def find_grants(
         self, organization: OrganizationInfo, filters: Optional[GrantFilters] = None
     ) -> list[Grant]:
+        """
+        Entry point used by the router.
+
+        Args:
+            organization: Profile of the nonprofit we are assisting.
+            filters: Optional numeric and geographic constraints.
+        """
         if self.settings.is_mock_mode:
             return self._find_grants_mock(organization, filters)
 
@@ -31,6 +40,7 @@ class GrantFinderService:
     def _find_grants_mock(
         self, organization: OrganizationInfo, filters: Optional[GrantFilters]
     ) -> list[Grant]:
+        """Return mock data stored on disk for quick iteration."""
         grants = list(_load_mock_grants())
         grants = self._apply_filters(grants, filters, organization)
 
@@ -40,6 +50,9 @@ class GrantFinderService:
     async def _find_grants_live(
         self, organization: OrganizationInfo, filters: Optional[GrantFilters]
     ) -> List[Grant]:
+        """
+        Call the Perplexity Search API and map the results to our schema.
+        """
         client = PerplexityClient(self.settings)
         max_results = filters.max_results if filters and filters.max_results else 10
         query = self._build_search_query(organization, filters, max_results)
@@ -61,6 +74,9 @@ class GrantFinderService:
         filters: Optional[GrantFilters],
         _organization: OrganizationInfo,
     ) -> list[Grant]:
+        """
+        Apply simple filtering that works for both mock and live output.
+        """
         if not filters:
             return list(grants)
 
@@ -89,6 +105,9 @@ class GrantFinderService:
         filters: Optional[GrantFilters],
         max_results: int,
     ) -> str:
+        """
+        Construct a targeted search query string for the Perplexity Search API.
+        """
         province = (
             organization.address.province
             if organization.address and organization.address.province
@@ -119,6 +138,7 @@ class GrantFinderService:
 
 @lru_cache(maxsize=1)
 def _load_mock_grants() -> tuple[Grant, ...]:
+    """Load and cache mock grants from JSON."""
     if not SAMPLES_PATH.exists():
         raise FileNotFoundError(
             f"Could not find mock grants data at {SAMPLES_PATH}. "
@@ -132,18 +152,21 @@ def _load_mock_grants() -> tuple[Grant, ...]:
 
 
 def _matches_province(grant: Grant, province: str) -> bool:
+    """True if the grant is available nationwide or matches the desired province."""
     if not grant.region or grant.region.lower() == "national":
         return True
     return grant.region.strip().lower() == province.strip().lower()
 
 
 def _before_deadline(grant: Grant, deadline_before: date) -> bool:
+    """True if the grant deadline is earlier than the cutoff."""
     if grant.deadline is None:
         return True
     return grant.deadline < deadline_before
 
 
 def _meets_min_amount(grant: Grant, min_amount: int) -> bool:
+    """True if the grant offers at least the desired minimum funding."""
     amount_fields = [grant.amount_max, grant.amount_min]
     available_amounts = [amt for amt in amount_fields if isinstance(amt, int)]
     if not available_amounts:

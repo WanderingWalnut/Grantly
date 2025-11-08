@@ -10,6 +10,9 @@ ALLOWED_DOMAINS: Iterable[str] = ("canada.ca", "gc.ca")
 def parse_grants_from_search(response: Dict[str, Any]) -> List[Grant]:
     """
     Normalize a Perplexity Search API response into Grant models.
+
+    The Search API returns a list of ranked web documents. We keep only federal
+    government sources and convert the minimal metadata into our Grant schema.
     """
     results = response.get("results")
     if not isinstance(results, list):
@@ -28,6 +31,7 @@ def parse_grants_from_search(response: Dict[str, Any]) -> List[Grant]:
             # Skip non-federal sources to stay aligned with Canada-wide federal grants.
             continue
 
+        # Build a dictionary compatible with the Grant Pydantic model.
         grant_data: Dict[str, Any] = {
             "title": item.get("title") or "Unnamed Program",
             "link": url,
@@ -50,10 +54,12 @@ def parse_grants_from_search(response: Dict[str, Any]) -> List[Grant]:
 
 
 def _get_url(item: Dict[str, Any]) -> str | None:
+    """Normalize link field naming differences."""
     url = item.get("url") or item.get("link")
     return str(url) if url else None
 
 
 def _is_allowed_domain(url: str) -> bool:
+    """Ensure we only surface government sources for now."""
     return any(domain in url for domain in ALLOWED_DOMAINS)
 
