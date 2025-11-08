@@ -1,71 +1,52 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApplications } from '../../context/ApplicationContext';
 
-type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected';
+type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected' | 'started';
 
-interface Application {
+interface TrackerApplication {
   id: number;
   grantTitle: string;
   funder: string;
   amount: string;
   status: ApplicationStatus;
   submittedDate?: string;
-  deadline: string;
+  deadline?: string;
   progress: number;
   nextSteps?: string;
 }
 
 export const ApplicationTracker = () => {
+  const navigate = useNavigate();
+  const { applications: contextApplications } = useApplications();
   const [filter, setFilter] = useState<ApplicationStatus | 'all'>('all');
 
-  // Mock data for applications
-  const mockApplications: Application[] = [
-    {
-      id: 1,
-      grantTitle: 'Community Development Block Grant',
-      funder: 'HUD',
-      amount: '$500,000',
-      status: 'under-review',
-      submittedDate: '2024-01-15',
-      deadline: '2024-03-15',
-      progress: 100,
-      nextSteps: 'Waiting for review committee decision'
-    },
-    {
-      id: 2,
-      grantTitle: 'Environmental Justice Grant',
-      funder: 'EPA',
-      amount: '$250,000',
-      status: 'draft',
-      deadline: '2024-02-28',
-      progress: 65,
-      nextSteps: 'Complete budget narrative and submit'
-    },
-    {
-      id: 3,
-      grantTitle: 'Youth Development Initiative',
-      funder: 'RWJF',
-      amount: '$100,000',
-      status: 'approved',
-      submittedDate: '2023-12-01',
-      deadline: '2024-01-31',
-      progress: 100,
-      nextSteps: 'Begin project implementation'
-    },
-    {
-      id: 4,
-      grantTitle: 'Arts Education Program',
-      funder: 'NEA',
-      amount: '$75,000',
-      status: 'submitted',
-      submittedDate: '2024-01-10',
-      deadline: '2024-02-15',
-      progress: 100,
-      nextSteps: 'Application under initial review'
-    }
+  // Convert context applications to tracker format
+  const realApplications: TrackerApplication[] = contextApplications
+    .filter(app => app.status === 'success')
+    .map(app => ({
+      id: app.id,
+      grantTitle: app.grantTitle,
+      funder: app.funder,
+      amount: app.amount,
+      status: 'started' as ApplicationStatus,
+      submittedDate: new Date(app.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+      progress: 25,
+      nextSteps: 'Complete application form and gather required documents'
+    }));
+
+  // Mock data for other statuses (keeping some examples)
+  const mockApplications: TrackerApplication[] = [
+    // Example applications with different statuses (for demo)
   ];
+
+  // Combine real applications from matches with mock applications
+  const allApplications = [...realApplications, ...mockApplications];
 
   const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
+      case 'started':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'draft':
         return 'bg-accent-100 text-accent-700 border-accent-200';
       case 'submitted':
@@ -83,6 +64,12 @@ export const ApplicationTracker = () => {
 
   const getStatusIcon = (status: ApplicationStatus) => {
     switch (status) {
+      case 'started':
+        return (
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        );
       case 'draft':
         return (
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,8 +104,8 @@ export const ApplicationTracker = () => {
   };
 
   const filteredApplications = filter === 'all' 
-    ? mockApplications 
-    : mockApplications.filter(app => app.status === filter);
+    ? allApplications 
+    : allApplications.filter(app => app.status === filter);
 
   return (
     <div className="p-6 lg:p-8">
@@ -132,12 +119,13 @@ export const ApplicationTracker = () => {
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-xl border border-primary-100/50">
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'all', label: 'All Applications', count: mockApplications.length },
-              { key: 'draft', label: 'Draft', count: mockApplications.filter(app => app.status === 'draft').length },
-              { key: 'submitted', label: 'Submitted', count: mockApplications.filter(app => app.status === 'submitted').length },
-              { key: 'under-review', label: 'Under Review', count: mockApplications.filter(app => app.status === 'under-review').length },
-              { key: 'approved', label: 'Approved', count: mockApplications.filter(app => app.status === 'approved').length },
-              { key: 'rejected', label: 'Rejected', count: mockApplications.filter(app => app.status === 'rejected').length }
+              { key: 'all', label: 'All Applications', count: allApplications.length },
+              { key: 'started', label: 'Started', count: allApplications.filter(app => app.status === 'started').length },
+              { key: 'draft', label: 'Draft', count: allApplications.filter(app => app.status === 'draft').length },
+              { key: 'submitted', label: 'Submitted', count: allApplications.filter(app => app.status === 'submitted').length },
+              { key: 'under-review', label: 'Under Review', count: allApplications.filter(app => app.status === 'under-review').length },
+              { key: 'approved', label: 'Approved', count: allApplications.filter(app => app.status === 'approved').length },
+              { key: 'rejected', label: 'Rejected', count: allApplications.filter(app => app.status === 'rejected').length }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -187,10 +175,12 @@ export const ApplicationTracker = () => {
                       <span className="text-surface-500 font-medium">Amount:</span>
                       <span className="ml-2 text-surface-900 font-semibold">{application.amount}</span>
                     </div>
-                    <div>
-                      <span className="text-surface-500 font-medium">Deadline:</span>
-                      <span className="ml-2 text-surface-900">{application.deadline}</span>
-                    </div>
+                    {application.deadline && (
+                      <div>
+                        <span className="text-surface-500 font-medium">Deadline:</span>
+                        <span className="ml-2 text-surface-900">{application.deadline}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -225,6 +215,16 @@ export const ApplicationTracker = () => {
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-surface-200">
+                {application.status === 'started' && (
+                  <>
+                    <button className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200">
+                      Continue Application
+                    </button>
+                    <button className="px-4 py-2 border-2 border-primary-500 text-primary-600 font-semibold rounded-civic hover:bg-primary-50 transition-all duration-200">
+                      View Grant Details
+                    </button>
+                  </>
+                )}
                 {application.status === 'draft' && (
                   <>
                     <button className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200">
@@ -270,7 +270,10 @@ export const ApplicationTracker = () => {
               : `No applications with status "${filter.replace('-', ' ')}".`
             }
           </p>
-          <button className="px-6 py-3 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200">
+          <button 
+            onClick={() => navigate('/matches')}
+            className="px-6 py-3 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200"
+          >
             Browse Grant Matches
           </button>
         </div>

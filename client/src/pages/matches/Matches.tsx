@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { useApplications } from '../../context/ApplicationContext';
 
+interface SuccessMessage {
+  id: number;
+  grantTitle: string;
+}
+
 export const Matches = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(3);
+  const [successMessages, setSuccessMessages] = useState<SuccessMessage[]>([]);
   const { applications, addApplication } = useApplications();
 
   // Mock data for grant matches (expanded list)
@@ -110,8 +116,18 @@ export const Matches = () => {
     }
   ];
 
-  // Filter matches based on search query
+  // Filter matches based on search query and exclude successfully started applications
   const filteredMatches = allMockMatches.filter((match) => {
+    // Check if this grant has been successfully applied to (exclude only successful ones)
+    const alreadySuccessful = applications.some(
+      app => app.id === match.id && app.status === 'success'
+    );
+    
+    // Exclude grants that have already been successfully applied to
+    // But allow failed applications to be retried (they will show in the list)
+    if (alreadySuccessful) return false;
+    
+    // Apply search filter
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
@@ -150,14 +166,31 @@ export const Matches = () => {
     
     const isSuccess = Math.random() > 0.3;
     
-    addApplication({
-      id: matchId,
-      grantTitle: matchTitle,
-      funder,
-      amount,
-      status: isSuccess ? 'success' : 'failed',
-      timestamp: new Date()
-    });
+    // Only add to context if successful
+    if (isSuccess) {
+      addApplication({
+        id: matchId,
+        grantTitle: matchTitle,
+        funder,
+        amount,
+        status: 'success',
+        timestamp: new Date()
+      });
+      
+      // Add success message to the stack (stays until user clicks X)
+      setSuccessMessages(prev => [...prev, { id: matchId, grantTitle: matchTitle }]);
+    } else {
+      // For failed applications, just add temporarily to show the badge
+      // It will be replaced on retry
+      addApplication({
+        id: matchId,
+        grantTitle: matchTitle,
+        funder,
+        amount,
+        status: 'failed',
+        timestamp: new Date()
+      });
+    }
     
     setProcessingId(null);
   };
@@ -167,8 +200,48 @@ export const Matches = () => {
     return applications.find(app => app.id === matchId);
   };
 
+  // Remove a success message
+  const removeSuccessMessage = (id: number) => {
+    setSuccessMessages(prev => prev.filter(msg => msg.id !== id));
+  };
+
   return (
     <div className="p-4 lg:p-6">
+      {/* Success Messages - Stacked */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col gap-3">
+        {successMessages.map((message, index) => (
+          <div 
+            key={message.id}
+            className="animate-in slide-in-from-top-5 fade-in duration-300"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl shadow-2xl border border-green-400 max-w-md">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-1">Application Started Successfully!</h3>
+                  <p className="text-sm text-green-50">
+                    Your application for <span className="font-semibold">"{message.grantTitle}"</span> has been started. View it in the Application Tracker.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => removeSuccessMessage(message.id)}
+                  className="flex-shrink-0 text-white hover:text-green-100 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-surface-900">Grant Matches</h1>
@@ -340,7 +413,7 @@ export const Matches = () => {
               <div className="flex flex-wrap gap-2 pt-3 border-t border-surface-200">
                 <button 
                   onClick={() => handleStartApplication(match.id, match.title, match.funder, match.amount)}
-                  disabled={isProcessing || !!appStatus}
+                  disabled={isProcessing || (appStatus?.status === 'success')}
                   className="group flex items-center px-4 py-2 bg-gradient-civic text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {isProcessing ? (
@@ -352,7 +425,16 @@ export const Matches = () => {
                       Processing...
                     </>
                   ) : appStatus ? (
-                    appStatus.status === 'success' ? 'Application Started' : 'Application Failed'
+                    appStatus.status === 'success' ? (
+                      'Application Started'
+                    ) : (
+                      <>
+                        <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Retry Application
+                      </>
+                    )
                   ) : (
                     <>
                       <svg className="-ml-1 mr-2 h-4 w-4 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

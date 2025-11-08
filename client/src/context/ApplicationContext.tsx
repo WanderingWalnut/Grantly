@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
 
 export interface Application {
   id: number;
@@ -20,7 +21,20 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   const [applications, setApplications] = useState<Application[]>([]);
 
   const addApplication = (application: Application) => {
-    setApplications(prev => [application, ...prev]);
+    setApplications(prev => {
+      // Check if an application with this ID already exists
+      const existingIndex = prev.findIndex(app => app.id === application.id);
+      
+      if (existingIndex !== -1) {
+        // Replace the existing application (for retries)
+        const updated = [...prev];
+        updated[existingIndex] = application;
+        return updated;
+      } else {
+        // Add new application
+        return [application, ...prev];
+      }
+    });
   };
 
   return (
