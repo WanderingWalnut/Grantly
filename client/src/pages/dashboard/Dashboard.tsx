@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApplications } from '../../context/ApplicationContext';
 
@@ -5,6 +6,13 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { applications } = useApplications();
   const successfulApplications = applications.filter(app => app.status === 'success');
+  const [activityPage, setActivityPage] = useState(1);
+  const itemsPerPage = 4;
+  
+  const totalPages = Math.ceil(successfulApplications.length / itemsPerPage);
+  const startIndex = (activityPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentApplications = successfulApplications.slice(startIndex, endIndex);
 
   return (
     <div className="p-6 lg:p-8">
@@ -83,7 +91,31 @@ export const Dashboard = () => {
           <div className="p-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-surface-900 civic-heading">Recent Activity</h3>
-              <button className="text-sm text-primary-600 hover:text-primary-700 font-semibold">View All</button>
+              {successfulApplications.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setActivityPage(prev => Math.max(1, prev - 1))}
+                    disabled={activityPage === 1}
+                    className="p-1.5 rounded-lg hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="text-sm text-surface-600 font-medium min-w-[80px] text-center">
+                    Page {activityPage} of {Math.max(1, totalPages)}
+                  </span>
+                  <button 
+                    onClick={() => setActivityPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={activityPage >= totalPages}
+                    className="p-1.5 rounded-lg hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
             
             {successfulApplications.length === 0 ? (
@@ -108,31 +140,53 @@ export const Dashboard = () => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4 py-4">
-                {successfulApplications.slice(0, 5).map((app) => (
-                  <div key={app.id} className="flex items-start gap-4 p-4 bg-surface-50 rounded-xl hover:bg-surface-100 transition-colors duration-200">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-surface-900 truncate">{app.grantTitle}</h4>
-                      <p className="text-xs text-surface-600 mt-0.5">{app.funder}</p>
-                      <p className="text-xs text-surface-500 mt-1">{app.amount}</p>
-                    </div>
-                    <div className="text-xs text-surface-400">
-                      {new Date(app.timestamp).toLocaleDateString()}
+              <div className="space-y-3 py-4">
+                {currentApplications.map((app) => (
+                  <div key={app.id} className="group relative bg-gradient-to-r from-white to-green-50/30 rounded-xl border border-green-100 hover:border-green-200 hover:shadow-md transition-all duration-300 overflow-hidden">
+                    <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-green-400 to-green-600"></div>
+                    <div className="flex items-start gap-4 p-4 pl-5">
+                      <div className="flex-shrink-0 p-2.5 bg-green-100 rounded-xl group-hover:bg-green-200 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h4 className="text-base font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-200 leading-tight">{app.grantTitle}</h4>
+                          <span className="flex-shrink-0 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg">
+                            Application Started
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-surface-600 mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span className="font-medium">{app.funder}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-sm">
+                            <svg className="w-4 h-4 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="font-semibold text-accent-700">{app.amount}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-surface-500">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {new Date(app.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
-                {successfulApplications.length > 5 && (
-                  <button 
-                    onClick={() => navigate('/applications')}
-                    className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-semibold py-2"
-                  >
-                    View all {successfulApplications.length} applications →
-                  </button>
+                {currentApplications.length === 0 && activityPage > 1 && (
+                  <div className="text-center py-8 text-surface-500">
+                    No applications on this page
+                  </div>
                 )}
               </div>
             )}

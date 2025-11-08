@@ -129,7 +129,16 @@ export const Matches = () => {
 
   // Handle loading more matches
   const handleLoadMore = () => {
+    const previousCount = visibleCount;
     setVisibleCount(prev => prev + 3);
+    
+    // Scroll to the first new match after state updates
+    setTimeout(() => {
+      const firstNewMatchElement = document.querySelector(`[data-match-index="${previousCount}"]`);
+      if (firstNewMatchElement) {
+        firstNewMatchElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Handle starting an application
@@ -213,12 +222,16 @@ export const Matches = () => {
 
       {/* Match Results */}
       <div className="space-y-4">
-        {visibleMatches.map((match) => {
+        {visibleMatches.map((match, index) => {
           const appStatus = getApplicationStatus(match.id);
           const isProcessing = processingId === match.id;
           
           return (
-          <div key={match.id} className="group bg-white rounded-xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300">
+          <div 
+            key={match.id} 
+            data-match-index={index}
+            className="group bg-white rounded-xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300"
+          >
             <div className="p-4">
               {/* Header with Match Score */}
               <div className="flex justify-between items-start mb-3">
