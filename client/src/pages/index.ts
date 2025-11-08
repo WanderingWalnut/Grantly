@@ -7,5 +7,12 @@ export { Dashboard } from './dashboard';
 // Intake Form
 export { IntakeForm } from './intake-form';
 
-// Other pages can be exported here as needed
+// Matches
+export { Matches } from './matches';
+
+// Application Tracker
+export { ApplicationTracker } from './tracker';
+
+// Profile
+export { Profile } from './profile';
 
