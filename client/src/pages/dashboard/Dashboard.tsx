@@ -179,18 +179,21 @@ export const Dashboard = () => {
           </div>
 
           {/* Tips Card */}
-          <div className="bg-gradient-to-br from-primary-500 to-secondary-500 shadow-xl rounded-2xl p-6 text-white">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-bold text-lg mb-2">Professional Tip</h4>
-                <p className="text-sm text-white/90 leading-relaxed">
-                  Complete your organization profile to get more accurate grant matches and improve your success rate.
-                </p>
+          <div className="relative overflow-hidden bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-primary-100/50 hover:shadow-2xl transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-secondary-500/5"></div>
+            <div className="relative p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 p-3 bg-gradient-civic rounded-xl shadow-lg">
+                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-lg text-surface-900 civic-heading mb-2">Professional Tip</h4>
+                  <p className="text-sm text-surface-600 civic-text leading-relaxed">
+                    Complete your organization profile to get more accurate grant matches and improve your success rate.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
