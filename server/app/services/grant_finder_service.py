@@ -4,10 +4,12 @@ import json
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from app.core.config import Settings
 from app.models.schemas import Grant, GrantFilters, OrganizationInfo
+from app.services.parsing.grants_parser import parse_grants_from_search
+from app.services.perplexity_client import PerplexityClient
 
 SAMPLES_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "samples" / "grants_sample.json"
@@ -24,7 +26,7 @@ class GrantFinderService:
         if self.settings.is_mock_mode:
             return self._find_grants_mock(organization, filters)
 
-        raise NotImplementedError("Live mode is not yet implemented.")
+        return await self._find_grants_live(organization, filters)
 
     def _find_grants_mock(
         self, organization: OrganizationInfo, filters: Optional[GrantFilters]
@@ -33,6 +35,24 @@ class GrantFinderService:
         grants = self._apply_filters(grants, filters, organization)
 
         max_results = filters.max_results if filters and filters.max_results else 10
+        return grants[:max_results]
+
+    async def _find_grants_live(
+        self, organization: OrganizationInfo, filters: Optional[GrantFilters]
+    ) -> List[Grant]:
+        client = PerplexityClient(self.settings)
+        max_results = filters.max_results if filters and filters.max_results else 10
+        query = self._build_search_query(organization, filters, max_results)
+        domain_filter = ["canada.ca", "gc.ca"]
+        response = await client.search(
+            query=query,
+            max_results=max_results,
+            search_domain_filter=domain_filter,
+            max_tokens_per_page=1024,
+        )
+        grants = parse_grants_from_search(response)
+        grants = self._apply_filters(grants, filters, organization)
+
         return grants[:max_results]
 
     def _apply_filters(
@@ -62,6 +82,39 @@ class GrantFinderService:
             filtered.append(grant)
 
         return filtered
+
+    def _build_search_query(
+        self,
+        organization: OrganizationInfo,
+        filters: Optional[GrantFilters],
+        max_results: int,
+    ) -> str:
+        province = (
+            organization.address.province
+            if organization.address and organization.address.province
+            else (filters.province if filters else None)
+        )
+
+        query_parts = [
+            '"Government of Canada" funding program for nonprofits',
+            "site:canada.ca OR site:gc.ca",
+            f'"{organization.legal_name}" nonprofit',
+            f"NAICS {organization.naics_code}" if organization.naics_code else "",
+            f'"{province}"' if province else "",
+        ]
+
+        if organization.sector_tags:
+            query_parts.append(" ".join(organization.sector_tags))
+
+        if filters:
+            if filters.min_amount is not None:
+                query_parts.append(f"minimum funding {filters.min_amount} CAD")
+            if filters.deadline_before:
+                query_parts.append("currently open funding 2025")
+
+        query_parts.append(f"limit results {max_results}")
+
+        return " ".join(part for part in query_parts if part)
 
 
 @lru_cache(maxsize=1)
