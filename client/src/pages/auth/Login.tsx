@@ -38,9 +38,7 @@ export const Login = () => {
       <div className="hidden sm:flex sm:w-1/2 relative items-center justify-center p-12">
         <div className="text-center max-w-lg">
           <div className="flex items-center justify-center mb-8">
-            <div className="w-16 h-16 bg-gradient-civic rounded-3xl flex items-center justify-center shadow-xl">
-              <span className="text-white font-bold text-3xl">G</span>
-            </div>
+            <img src="/Logo.png" alt="Grantly Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-5xl font-bold text-surface-900 civic-heading mb-6">
             Welcome to Grantly
@@ -92,9 +90,7 @@ export const Login = () => {
           <div className="auth-form-container bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-primary-100/50 p-8">
             {/* Mobile Logo */}
             <div className="sm:hidden flex items-center justify-center mb-8">
-              <div className="w-12 h-12 bg-gradient-civic rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">G</span>
-              </div>
+              <img src="/Logo.png" alt="Grantly Logo" className="w-12 h-12 object-contain" />
             </div>
 
             <div className="text-center mb-8">
@@ -152,26 +148,6 @@ export const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                   />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-surface-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-surface-900 font-medium">
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a href="#" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors duration-200">
-                    Forgot password?
-                  </a>
                 </div>
               </div>
 
