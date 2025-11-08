@@ -63,6 +63,7 @@ class GrantFinderService:
             search_domain_filter=domain_filter,
             max_tokens_per_page=1024,
         )
+        print("Perplexity search response:", response)
         grants = parse_grants_from_search(response)
         grants = self._apply_filters(grants, filters, organization)
 
@@ -114,12 +115,22 @@ class GrantFinderService:
             else (filters.province if filters else None)
         )
 
+        targeted_keywords = [
+            '"Government of Canada" funding program',
+            '"open for applications" OR "currently accepting applications"',
+            '"application form" OR "apply online" OR "online application" OR "application portal"',
+            # Prefer official program pages rather than general overview hubs.
+            '"program details" OR "how to apply" OR "eligibility requirements"',
+            # Encourage references to deadlines so we can skip expired programs.
+            '"deadline" OR "closing date" OR "submission date"',
+        ]
+
         query_parts = [
-            '"Government of Canada" funding program for nonprofits',
             "site:canada.ca OR site:gc.ca",
             f'"{organization.legal_name}" nonprofit',
             f"NAICS {organization.naics_code}" if organization.naics_code else "",
             f'"{province}"' if province else "",
+            *targeted_keywords,
         ]
 
         if organization.sector_tags:
@@ -132,6 +143,9 @@ class GrantFinderService:
                 query_parts.append("currently open funding 2025")
 
         query_parts.append(f"limit results {max_results}")
+
+        # Encourage the search engine to avoid outdated or archived programs.
+        query_parts.append('"last updated" OR "2024" OR "2025"')
 
         return " ".join(part for part in query_parts if part)
 
