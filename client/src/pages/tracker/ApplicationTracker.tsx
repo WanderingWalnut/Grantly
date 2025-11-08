@@ -123,35 +123,8 @@ export const ApplicationTracker = () => {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-gradient-to-br from-accent-500 to-secondary-500 rounded-2xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h1 className="text-4xl font-bold text-surface-900 civic-heading">
-                Application Progress
-              </h1>
-            </div>
-            <p className="text-lg text-surface-600 civic-text max-w-2xl">
-              Track every step of your grant journey from draft to award
-            </p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-primary-100">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-6 h-6 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                <div className="text-2xl font-bold text-secondary-600">{filteredApplications.length}</div>
-              </div>
-              <div className="text-sm text-surface-600">Active Applications</div>
-            </div>
-          </div>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-surface-900">Applications</h1>
       </div>
 
       {/* Filter Tabs */}

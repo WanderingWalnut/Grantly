@@ -43,35 +43,8 @@ export const Matches = () => {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-gradient-to-br from-secondary-500 to-primary-500 rounded-2xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <h1 className="text-4xl font-bold text-surface-900 civic-heading">
-                Grant Matches
-              </h1>
-            </div>
-            <p className="text-lg text-surface-600 civic-text max-w-2xl">
-              Our AI has found grants specifically tailored to your organization's mission and needs
-            </p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-primary-100">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="text-2xl font-bold text-primary-600">94%</div>
-              </div>
-              <div className="text-sm text-surface-600">Average Match Score</div>
-            </div>
-          </div>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-surface-900">Grant Matches</h1>
       </div>
 
       {/* Search and Filters */}
