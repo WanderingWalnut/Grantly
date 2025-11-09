@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useApplications } from "../../hooks";
-import { useOrganization } from "../../context/OrganizationContext";
 import { generateGrantDraft } from "../../services";
+import {
+  ORGANIZATION_PROFILE,
+  ORGANIZATION_PROFILE_SUMMARY,
+} from "../../data/organizationProfile";
 
 const formatDateTime = (date?: Date | string) => {
   if (!date) return "Unknown";
@@ -12,38 +15,6 @@ const formatDateTime = (date?: Date | string) => {
   } catch {
     return "Unknown";
   }
-};
-
-const buildOrganizationSummary = (
-  organization: {
-    legal_business_name?: string;
-    operating_name?: string;
-    mission_statement?: string;
-    company_description?: string;
-    target_beneficiaries?: string;
-    business_sector?: string;
-    address?: string;
-  } | null
-) => {
-  if (!organization) {
-    return "No organization profile information provided.";
-  }
-
-  return [
-    `Organization Name: ${
-      organization.legal_business_name || organization.operating_name
-    }`,
-    organization.mission_statement &&
-      `Mission: ${organization.mission_statement}`,
-    organization.company_description &&
-      `About: ${organization.company_description}`,
-    organization.target_beneficiaries &&
-      `Target Beneficiaries: ${organization.target_beneficiaries}`,
-    organization.business_sector && `Sector: ${organization.business_sector}`,
-    organization.address && `Address: ${organization.address}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
 };
 
 const toEditableAnswers = (
@@ -58,14 +29,13 @@ const toEditableAnswers = (
       if (value == null) {
         acc[key] = "";
       } else if (Array.isArray(value)) {
-        acc[key] = value.join("\n");
+        if (value.every((item) => item && typeof item === "object")) {
+          acc[key] = JSON.stringify(value, null, 2);
+        } else {
+          acc[key] = value.map((item) => String(item ?? "")).join("\n");
+        }
       } else if (typeof value === "object") {
-        acc[key] = Object.entries(value as Record<string, unknown>)
-          .map(
-            ([subKey, subValue]) =>
-              `${subKey}: ${subValue as string | number | boolean | null}`
-          )
-          .join("\n");
+        acc[key] = JSON.stringify(value, null, 2);
       } else {
         acc[key] = String(value);
       }
@@ -84,6 +54,18 @@ const toDraftPayload = (
       if (!trimmed) {
         acc[key] = "";
         return acc;
+      }
+
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        try {
+          acc[key] = JSON.parse(trimmed);
+          return acc;
+        } catch (error) {
+          console.warn(`Failed to parse JSON for key "${key}"`, error);
+        }
       }
 
       // If the user entered multi-line text, treat it as an array of bullet points.
@@ -106,7 +88,6 @@ export const ReviewSession = () => {
   const { applicationId } = useParams<{ applicationId: string }>();
   const navigate = useNavigate();
   const { applications, updateApplicationDraft } = useApplications();
-  const { organization } = useOrganization();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [editableAnswers, setEditableAnswers] = useState<
@@ -167,7 +148,7 @@ export const ReviewSession = () => {
     setIsGenerating(true);
 
     try {
-      const summary = buildOrganizationSummary(organization);
+      const summary = ORGANIZATION_PROFILE_SUMMARY;
       const response = await generateGrantDraft({
         pdf_link: application.pdfLink,
         organization_summary: summary,
@@ -512,6 +493,370 @@ export const ReviewSession = () => {
                   Browserbase.
                 </p>
               )}
+            </div>
+
+            <div className="bg-surface-50 border border-surface-200 rounded-xl p-4 md:col-span-2">
+              <h2 className="text-sm font-semibold text-surface-500 uppercase tracking-wide mb-2">
+                Organization Profile
+              </h2>
+              <p className="text-sm text-surface-600 mb-4">
+                Draft responses are generated using the Prairie Heritage
+                Community Society profile shown below.
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="space-y-3 text-sm text-surface-700">
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Mission
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.mission}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      About
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.description}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Target Beneficiaries
+                    </span>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.targetBeneficiaries.map((group) => (
+                        <li key={group}>{group}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Sector Focus
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.sectorFocus.join(", ")}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Address
+                    </span>
+                    <p>
+                      {ORGANIZATION_PROFILE.address.street},{" "}
+                      {ORGANIZATION_PROFILE.address.city},{" "}
+                      {ORGANIZATION_PROFILE.address.province}{" "}
+                      {ORGANIZATION_PROFILE.address.postalCode},{" "}
+                      {ORGANIZATION_PROFILE.address.country}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm text-surface-700">
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Legal Signing Authority
+                    </span>
+                    <p className="mt-1">
+                      {ORGANIZATION_PROFILE.legalSigningAuthority.name},{" "}
+                      {ORGANIZATION_PROFILE.legalSigningAuthority.title}
+                    </p>
+                    <p className="text-surface-600">
+                      {ORGANIZATION_PROFILE.legalSigningAuthority.phone} ·{" "}
+                      {ORGANIZATION_PROFILE.legalSigningAuthority.email}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Primary Contact
+                    </span>
+                    <p className="mt-1">
+                      {ORGANIZATION_PROFILE.primaryContact.name},{" "}
+                      {ORGANIZATION_PROFILE.primaryContact.title}
+                    </p>
+                    <p className="text-surface-600">
+                      {ORGANIZATION_PROFILE.primaryContact.phone} ·{" "}
+                      {ORGANIZATION_PROFILE.primaryContact.email}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Signature Programs
+                    </span>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.signaturePrograms.map((program) => (
+                        <li key={program}>{program}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Facility Highlights
+                    </span>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.facilityHighlights.map(
+                        (highlight) => (
+                          <li key={highlight}>{highlight}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Key Metrics
+                    </span>
+                    <ul className="mt-2 space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.keyMetrics.map((metric) => (
+                        <li key={metric.label}>
+                          <span className="font-semibold text-surface-800">
+                            {metric.label}:
+                          </span>{" "}
+                          {metric.value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm text-surface-700">
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Project Overview
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.projectPlan.projectName}</p>
+                    <p className="text-surface-600">
+                      {ORGANIZATION_PROFILE.projectPlan.overview}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Scope Highlights
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.projectPlan.scope}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Canopy & Seating
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.projectPlan.canopyType}</p>
+                    <p className="text-surface-600">
+                      Seating:{" "}
+                      {ORGANIZATION_PROFILE.projectPlan.seatingMaterials}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Accessibility Features
+                    </span>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.projectPlan.accessibilityFeatures.map(
+                        (feature) => (
+                          <li key={feature}>{feature}</li>
+                        )
+                      )}
+                    </ul>
+                    <p className="mt-2 text-surface-600">
+                      {
+                        ORGANIZATION_PROFILE.projectPlan
+                          .additionalAccessibilityNotes
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Timeline Highlights
+                    </span>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.projectPlan.timelineHighlights.map(
+                        (milestone) => (
+                          <li key={milestone}>{milestone}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Equipment Ownership
+                    </span>
+                    <p>{ORGANIZATION_PROFILE.projectPlan.equipmentOwnership}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm text-surface-700">
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Funding Summary
+                    </span>
+                    <ul className="mt-2 space-y-1 text-surface-600">
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          CFEP Small Request:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.cfepRequest.toLocaleString(
+                          "en-CA"
+                        )}
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Total Project Expenses:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.totalProjectExpenses.toLocaleString(
+                          "en-CA"
+                        )}
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Total Project Cost:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.totalProjectCost.toLocaleString(
+                          "en-CA"
+                        )}
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Total Project Revenues:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.totalProjectRevenues.toLocaleString(
+                          "en-CA"
+                        )}
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Municipal Support:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.municipalSupport.amount.toLocaleString(
+                          "en-CA"
+                        )}{" "}
+                        (
+                        {
+                          ORGANIZATION_PROFILE.fundingPlan.municipalSupport
+                            .status
+                        }
+                        ) —{" "}
+                        {
+                          ORGANIZATION_PROFILE.fundingPlan.municipalSupport
+                            .description
+                        }
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Own Source:
+                        </span>{" "}
+                        $
+                        {ORGANIZATION_PROFILE.fundingPlan.ownSource.amount.toLocaleString(
+                          "en-CA"
+                        )}{" "}
+                        ({ORGANIZATION_PROFILE.fundingPlan.ownSource.status}) —{" "}
+                        {
+                          ORGANIZATION_PROFILE.fundingPlan.ownSource
+                            .documentation
+                        }
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Other Provincial Support:
+                        </span>{" "}
+                        {
+                          ORGANIZATION_PROFILE.fundingPlan
+                            .otherProvincialSupportDetails
+                        }
+                      </li>
+                      <li>
+                        <span className="font-semibold text-surface-800">
+                          Contingency Plan:
+                        </span>{" "}
+                        {ORGANIZATION_PROFILE.fundingPlan.contingencyPlan}
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Funding Sources
+                    </span>
+                    <ul className="mt-2 space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.fundingPlan.fundingSources.map(
+                        (source) => (
+                          <li key={source.source}>
+                            <span className="font-semibold text-surface-800">
+                              {source.source}:
+                            </span>{" "}
+                            ${source.amount.toLocaleString("en-CA")} (
+                            {source.status})
+                            {source.notes ? ` — ${source.notes}` : ""}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Project Expenses
+                    </span>
+                    <ul className="mt-2 space-y-1 text-surface-600">
+                      {ORGANIZATION_PROFILE.fundingPlan.projectExpenses.map(
+                        (expense) => (
+                          <li key={expense.item}>
+                            <span className="font-semibold text-surface-800">
+                              {expense.item}:
+                            </span>{" "}
+                            ${expense.amount.toLocaleString("en-CA")} —{" "}
+                            {expense.description}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-surface-900">
+                      Donated Labour
+                    </span>
+                    {ORGANIZATION_PROFILE.fundingPlan.donatedLabourPresent ? (
+                      <ul className="mt-2 space-y-1 text-surface-600">
+                        {ORGANIZATION_PROFILE.fundingPlan.donatedLabour.map(
+                          (labour) => (
+                            <li key={labour.role}>
+                              <span className="font-semibold text-surface-800">
+                                {labour.role}:
+                              </span>{" "}
+                              {labour.hours} hours ($
+                              {labour.value.toLocaleString("en-CA")}) —{" "}
+                              {labour.description}
+                            </li>
+                          )
+                        )}
+                        <li>
+                          <span className="font-semibold text-surface-800">
+                            Total Donated Labour Value:
+                          </span>{" "}
+                          $
+                          {ORGANIZATION_PROFILE.fundingPlan.donatedLabourValue.toLocaleString(
+                            "en-CA"
+                          )}
+                        </li>
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-surface-600">
+                        No donated labour reported.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <span className="text-sm font-semibold text-surface-900">
+                  Summary sent to draft generator
+                </span>
+                <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-white border border-surface-200 p-3 text-xs text-surface-600">
+                  {ORGANIZATION_PROFILE_SUMMARY}
+                </pre>
+              </div>
             </div>
           </div>
         </div>
