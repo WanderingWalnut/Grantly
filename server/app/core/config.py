@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, HttpUrl
 
-load_dotenv()
+# Load .env file from server directory (parent of app directory)
+server_dir = Path(__file__).parent.parent.parent
+env_path = server_dir / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 class Settings(BaseModel):

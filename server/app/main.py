@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from pathlib import Path
 
 from app.routers.grants import router as grants_router
 from app.routers.auth import router as auth_router
 from app.routers.nonprofits import router as nonprofits_router
 
-load_dotenv()
+# Load .env file from server directory (parent of app directory)
+server_dir = Path(__file__).parent.parent
+env_path = server_dir / '.env'
+load_dotenv(dotenv_path=env_path)
 
 app = FastAPI(
     title="AI-Powered Grant Assistant",

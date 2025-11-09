@@ -2,7 +2,7 @@
 from typing import Dict, Any, Optional
 
 from supabase import Client
-from gotrue.errors import AuthApiError
+from supabase_auth.errors import AuthApiError
 
 from .supabase_client import supabase
 
@@ -154,5 +154,20 @@ class AuthService:
             raise AuthApiError(f"Refresh failed: {str(e)}", e.status)
 
 
-# Create singleton instance
-auth_service = AuthService()
+# Create singleton instance (lazy initialization)
+_auth_service_instance: Optional[AuthService] = None
+
+def get_auth_service() -> AuthService:
+    """Get or create the auth service singleton (lazy initialization)."""
+    global _auth_service_instance
+    if _auth_service_instance is None:
+        _auth_service_instance = AuthService()
+    return _auth_service_instance
+
+# For backward compatibility, create a property-like accessor
+class AuthServiceProxy:
+    """Proxy to lazy-load auth service."""
+    def __getattr__(self, name):
+        return getattr(get_auth_service(), name)
+
+auth_service = AuthServiceProxy()
