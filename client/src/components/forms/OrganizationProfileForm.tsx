@@ -275,8 +275,10 @@ export const OrganizationProfileForm = () => {
               <option value="">Select structure</option>
               <option value="sole proprietorship">Sole Proprietorship</option>
               <option value="partnership">Partnership</option>
-              <option value="llc">LLC</option>
               <option value="corporation">Corporation</option>
+              <option value="nonprofit">Non-profit / Charity</option>
+              <option value="cooperative">Cooperative</option>
+              <option value="other">Other</option>
             </select>
           </div>
         </div>
