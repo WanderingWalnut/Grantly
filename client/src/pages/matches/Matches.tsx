@@ -267,16 +267,6 @@ export const Matches = () => {
                     <h3 className="text-lg font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">
                       {match.title}
                     </h3>
-                    <div className={`flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      match.matchPercentage >= 90 ? 'bg-green-100 text-green-700' :
-                      match.matchPercentage >= 80 ? 'bg-accent-100 text-accent-700' :
-                      'bg-secondary-100 text-secondary-700'
-                    }`}>
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {match.matchPercentage}%
-                    </div>
                     
                     {appStatus && (
                       <div className={`flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${

@@ -14,6 +14,59 @@ export const Dashboard = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentApplications = successfulApplications.slice(startIndex, endIndex);
 
+  // Mock data for available grants (matching Matches.tsx)
+  const allAvailableGrants = [
+    { id: 1, amount: '$500,000 - $2,000,000' },
+    { id: 2, amount: '$100,000 - $500,000' },
+    { id: 3, amount: '$50,000 - $250,000' },
+    { id: 4, amount: '$250,000 - $1,000,000' },
+    { id: 5, amount: '$25,000 - $150,000' },
+    { id: 6, amount: '$100,000 - $500,000' },
+    { id: 7, amount: '$300,000 - $750,000' },
+    { id: 8, amount: '$50,000 - $200,000' },
+    { id: 9, amount: '$75,000 - $400,000' }
+  ];
+
+  // Calculate available grants (excluding successfully applied ones)
+  const availableGrants = allAvailableGrants.filter(grant => 
+    !successfulApplications.some(app => app.id === grant.id)
+  );
+  const availableGrantsCount = availableGrants.length;
+  const newGrantsThisWeek = 3; // This would be calculated based on grant creation dates
+
+  // Calculate active applications statistics
+  const activeApplicationsCount = successfulApplications.length;
+  const underReviewCount = Math.floor(activeApplicationsCount * 0.5); // 50% under review as example
+
+  // Calculate potential funding
+  const parseAmount = (amountString: string) => {
+    // Extract max value from range like "$500,000 - $2,000,000"
+    const match = amountString.match(/\$([\d,]+)\s*-\s*\$([\d,]+)/);
+    if (match) {
+      const maxValue = parseInt(match[2].replace(/,/g, ''));
+      return maxValue;
+    }
+    return 0;
+  };
+
+  const totalPotentialFunding = availableGrants.reduce((sum, grant) => {
+    return sum + parseAmount(grant.amount);
+  }, 0);
+
+  const highProbabilityGrants = availableGrants.slice(0, 3); // Top 3 matches
+  const highProbabilityFunding = highProbabilityGrants.reduce((sum, grant) => {
+    return sum + parseAmount(grant.amount);
+  }, 0);
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(0)}K`;
+    }
+    return `$${value}`;
+  };
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
@@ -31,14 +84,14 @@ export const Dashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">12</div>
+            <div className="text-3xl font-bold text-surface-900">{availableGrantsCount}</div>
           </div>
           <div className="flex items-end justify-between">
             <div className="flex items-center text-sm">
               <svg className="w-4 h-4 mr-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              <span className="text-green-600 font-semibold">+3</span>
+              <span className="text-green-600 font-semibold">+{newGrantsThisWeek}</span>
               <span className="text-surface-500 ml-1">this week</span>
             </div>
             <div className="text-right text-sm font-medium text-surface-600">Available Grants</div>
@@ -53,11 +106,11 @@ export const Dashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">4</div>
+            <div className="text-3xl font-bold text-surface-900">{activeApplicationsCount}</div>
           </div>
           <div className="flex items-end justify-between">
             <div className="flex items-center text-sm text-surface-600">
-              <span className="font-semibold">2</span>
+              <span className="font-semibold">{underReviewCount}</span>
               <span className="ml-1">under review</span>
             </div>
             <div className="text-right text-sm font-medium text-surface-600">Active Applications</div>
@@ -72,11 +125,11 @@ export const Dashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">$125K</div>
+            <div className="text-3xl font-bold text-surface-900">{formatCurrency(totalPotentialFunding)}</div>
           </div>
           <div className="flex items-end justify-between">
             <div className="flex items-center text-sm text-surface-600">
-              <span className="font-semibold">$45K</span>
+              <span className="font-semibold">{formatCurrency(highProbabilityFunding)}</span>
               <span className="ml-1">high probability</span>
             </div>
             <div className="text-right text-sm font-medium text-surface-600">Potential Funding</div>
