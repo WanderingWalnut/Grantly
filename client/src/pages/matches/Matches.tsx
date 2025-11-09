@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useApplications } from '../../context/ApplicationContext';
+import { useNavigate } from 'react-router-dom';
+import { useApplications } from '../../hooks';
 import {
   buildDefaultGrantSearchRequest,
+  fetchGrantPdfLink,
   searchGrants,
   summarizeGrantResultsWithGemini,
 } from '../../services';
@@ -57,20 +59,22 @@ const formatAmountFromNumbers = (min: number | null | undefined, max: number | n
 };
 
 export const Matches = () => {
+  const navigate = useNavigate();
   const [matches, setMatches] = useState<MatchCard[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [applicationErrors, setApplicationErrors] = useState<Record<number, string>>({});
   const { applications, addApplication, addSuccessMessage } = useApplications();
 
   const filteredMatches = useMemo(() => {
     return matches.filter((match) => {
-      const alreadySuccessful = applications.some(
-        app => app.id === match.id && app.status === 'success'
+      const alreadyStarted = applications.some(
+        app => app.id === match.id && app.status === 'started'
       );
-      if (alreadySuccessful) return false;
+      if (alreadyStarted) return false;
 
       if (!searchQuery) return true;
 
@@ -105,21 +109,33 @@ export const Matches = () => {
 
   const handleStartApplication = async (matchId: number, matchTitle: string, funder: string, amount: string) => {
     setProcessingId(matchId);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setApplicationErrors((prev) => {
+      const next = { ...prev };
+      delete next[matchId];
+      return next;
+    });
 
-    const isSuccess = Math.random() > 0.3;
+    try {
+      const session = await fetchGrantPdfLink('https://www.alberta.ca/community-facility-enhancement-program-small');
 
-    if (isSuccess) {
       addApplication({
         id: matchId,
         grantTitle: matchTitle,
         funder,
         amount,
-        status: 'success',
+        status: 'started',
         timestamp: new Date(),
+        sessionId: session.session_id,
+        liveViewUrl: session.live_view_url,
+        pdfLink: session.pdf_link,
       });
       addSuccessMessage({ id: matchId, grantTitle: matchTitle });
-    } else {
+
+      if (typeof window !== 'undefined') {
+        window.open(session.live_view_url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('Failed to launch Browserbase session', error);
       addApplication({
         id: matchId,
         grantTitle: matchTitle,
@@ -128,9 +144,13 @@ export const Matches = () => {
         status: 'failed',
         timestamp: new Date(),
       });
+      setApplicationErrors((prev) => ({
+        ...prev,
+        [matchId]: 'Unable to launch Browserbase session. Please try again.',
+      }));
+    } finally {
+      setProcessingId(null);
     }
-
-    setProcessingId(null);
   };
 
   const getApplicationStatus = (matchId: number) => {
@@ -217,7 +237,7 @@ export const Matches = () => {
         <div className="flex items-center gap-3">
           {applications.length > 0 && (
             <span className="text-sm text-surface-600">
-              {applications.filter(a => a.status === 'success').length} applications started
+              {applications.filter(a => a.status === 'started').length} applications started
             </span>
           )}
           <button
@@ -321,11 +341,11 @@ export const Matches = () => {
 
                       {appStatus && (
                         <div className={`flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
-                          appStatus.status === 'success'
+                          appStatus.status === 'started'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
                         }`}>
-                          {appStatus.status === 'success' ? (
+                          {appStatus.status === 'started' ? (
                             <>
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -412,7 +432,7 @@ export const Matches = () => {
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-surface-200">
                   <button
                     onClick={() => handleStartApplication(match.id, match.title, match.funder, match.amount)}
-                    disabled={isProcessing || getApplicationStatus(match.id)?.status === 'success'}
+                    disabled={isProcessing || appStatus?.status === 'started'}
                     className="group flex items-center px-4 py-2 bg-gradient-civic text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     {isProcessing ? (
@@ -423,8 +443,8 @@ export const Matches = () => {
                         </svg>
                         Processing...
                       </>
-                    ) : getApplicationStatus(match.id) ? (
-                      getApplicationStatus(match.id)?.status === 'success' ? (
+                    ) : appStatus ? (
+                      appStatus.status === 'started' ? (
                         'Application Started'
                       ) : (
                         <>
@@ -444,6 +464,32 @@ export const Matches = () => {
                     )}
                   </button>
 
+                  {appStatus?.status === 'started' && appStatus.liveViewUrl && (
+                    <a
+                      href={appStatus.liveViewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center px-4 py-2 border border-primary-200 text-primary-600 font-semibold rounded-lg hover:bg-primary-50 hover:border-primary-300 transition-all duration-300 text-sm"
+                    >
+                      <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-1.138a1 1 0 01.894 1.73l-11 9a1 1 0 01-1.447-1.083L9 14.5 5.553 9.39a1 1 0 011.447-1.083L11 10l.277-4.168a1 1 0 011.76-.63l1.963 2.62A1 1 0 0015.277 9H15v1z" />
+                      </svg>
+                      View Live Session
+                    </a>
+                  )}
+
+                  {appStatus?.status === 'started' && (
+                    <button
+                      onClick={() => navigate(`/applications/${match.id}`)}
+                      className="flex items-center px-4 py-2 border border-secondary-200 text-secondary-600 font-semibold rounded-lg hover:bg-secondary-50 hover:border-secondary-300 transition-all duration-300 text-sm"
+                    >
+                      <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+                      </svg>
+                      Open Workspace
+                    </button>
+                  )}
+
                   <a
                     href={match.link}
                     target="_blank"
@@ -462,6 +508,9 @@ export const Matches = () => {
                     </svg>
                   </button>
                 </div>
+                {applicationErrors[match.id] && (
+                  <p className="text-sm text-red-600 mt-2">{applicationErrors[match.id]}</p>
+                )}
               </div>
             </div>
           );

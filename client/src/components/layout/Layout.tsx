@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigation } from './Navigation';
-import { useApplications } from '../../context/ApplicationContext';
+import { useApplications } from '../../hooks';
 
 interface LayoutProps {
   children: ReactNode;

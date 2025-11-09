@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApplications } from '../../context/ApplicationContext';
+import { useApplications } from '../../hooks';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { applications } = useApplications();
-  const successfulApplications = applications.filter(app => app.status === 'success');
+  const successfulApplications = applications.filter(app => app.status === 'started');
   const [activityPage, setActivityPage] = useState(1);
   const itemsPerPage = 3;
   

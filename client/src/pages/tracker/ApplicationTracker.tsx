@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApplications } from '../../context/ApplicationContext';
+import { useApplications } from '../../hooks';
 
 type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected' | 'started';
 
@@ -14,6 +14,9 @@ interface TrackerApplication {
   deadline?: string;
   progress: number;
   nextSteps?: string;
+  sessionId?: string;
+  liveViewUrl?: string;
+  pdfLink?: string;
 }
 
 export const ApplicationTracker = () => {
@@ -23,7 +26,7 @@ export const ApplicationTracker = () => {
 
   // Convert context applications to tracker format
   const realApplications: TrackerApplication[] = contextApplications
-    .filter(app => app.status === 'success')
+    .filter(app => app.status === 'started')
     .map(app => ({
       id: app.id,
       grantTitle: app.grantTitle,
@@ -32,7 +35,10 @@ export const ApplicationTracker = () => {
       status: 'started' as ApplicationStatus,
       submittedDate: new Date(app.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }),
       progress: 25,
-      nextSteps: 'Complete application form and gather required documents'
+      nextSteps: 'Complete application form and gather required documents',
+      sessionId: app.sessionId,
+      liveViewUrl: app.liveViewUrl,
+      pdfLink: app.pdfLink,
     }));
 
   // Mock data for other statuses (keeping some examples)
@@ -181,6 +187,40 @@ export const ApplicationTracker = () => {
                         <span className="ml-2 text-surface-900">{application.deadline}</span>
                       </div>
                     )}
+                    {application.sessionId && (
+                      <div className="md:col-span-3 bg-surface-100 rounded-lg p-2.5 border border-surface-200">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                          <div>
+                            <div className="text-xs font-medium text-surface-500 uppercase tracking-wide">
+                              Browserbase Session
+                            </div>
+                            <div className="text-sm text-surface-900 font-semibold">{application.sessionId}</div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            {application.liveViewUrl && (
+                              <a
+                                href={application.liveViewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-primary-200 text-primary-600 hover:bg-primary-50 transition-colors"
+                              >
+                                View Live Session
+                              </a>
+                            )}
+                            {application.pdfLink && (
+                              <a
+                                href={application.pdfLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-secondary-200 text-secondary-600 hover:bg-secondary-50 transition-colors"
+                              >
+                                View PDF
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -216,14 +256,24 @@ export const ApplicationTracker = () => {
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-surface-200">
                 {application.status === 'started' && (
-                  <>
-                    <button className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200">
-                      Continue Application
+                  <div className="flex gap-3 flex-wrap">
+                    {application.liveViewUrl && (
+                      <a
+                        href={application.liveViewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 border-2 border-primary-500 text-primary-600 font-semibold rounded-civic hover:bg-primary-50 transition-all duration-200"
+                      >
+                        View Live Session
+                      </a>
+                    )}
+                    <button
+                      onClick={() => navigate(`/applications/${application.id}`)}
+                      className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200"
+                    >
+                      Open Workspace
                     </button>
-                    <button className="px-4 py-2 border-2 border-primary-500 text-primary-600 font-semibold rounded-civic hover:bg-primary-50 transition-all duration-200">
-                      View Grant Details
-                    </button>
-                  </>
+                  </div>
                 )}
                 {application.status === 'draft' && (
                   <>

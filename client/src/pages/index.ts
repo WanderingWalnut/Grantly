@@ -16,3 +16,6 @@ export { ApplicationTracker } from './tracker';
 // Profile
 export { Profile } from './profile';
 
+// Review Session Workspace
+export { ReviewSession } from './review-session';
+

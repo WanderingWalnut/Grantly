@@ -1,5 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login, Signup, Dashboard, IntakeForm, Matches, ApplicationTracker, Profile, VerifyEmail } from './pages';
+import {
+  Login,
+  Signup,
+  Dashboard,
+  IntakeForm,
+  Matches,
+  ApplicationTracker,
+  Profile,
+  VerifyEmail,
+  ReviewSession,
+} from './pages';
 import { Layout } from './components';
 import { ApplicationProvider } from './context/ApplicationContext';
 import { AuthProvider } from './context/AuthContext';
@@ -23,6 +33,7 @@ function App() {
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/matches" element={<Layout><Matches /></Layout>} />
             <Route path="/tracker" element={<Layout><ApplicationTracker /></Layout>} />
+            <Route path="/applications/:applicationId" element={<Layout><ReviewSession /></Layout>} />
             <Route path="/profile" element={<Layout><Profile /></Layout>} />
             
             <Route path="*" element={<Navigate to="/" replace />} />
