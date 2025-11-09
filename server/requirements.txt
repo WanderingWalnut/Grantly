@@ -7,4 +7,7 @@ pydantic[email]
 pydantic
 sqlalchemy
 psycopg[binary]
+browserbase
+playwright
+gotrue
 

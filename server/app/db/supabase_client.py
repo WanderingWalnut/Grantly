@@ -1,11 +1,13 @@
 """Supabase client configuration and initialization."""
 import os
 from functools import lru_cache
+from pathlib import Path
 
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-load_dotenv()
+# Always load the server-level .env so the reloader process sees required vars.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 @lru_cache(maxsize=1)
@@ -24,7 +26,7 @@ def get_supabase_client() -> Client:
         ValueError: If required environment variables are missing
     """
     supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
+    supabase_key = os.getenv("SUPABASE_ANON_KEY")
     
     if not supabase_url or not supabase_key:
         raise ValueError(

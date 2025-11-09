@@ -16,6 +16,9 @@ class Settings(BaseModel):
     perplexity_model: str = Field(default="sonar-small-online")
     perplexity_base_url: HttpUrl = Field(default="https://api.perplexity.ai")
     http_timeout_seconds: int = Field(default=20)
+    browserbase_api_key: Optional[str] = None
+    browserbase_project_id: Optional[str] = None
+    browserbase_region: Optional[str] = None
 
     @classmethod
     def load(cls) -> "Settings":
@@ -26,6 +29,9 @@ class Settings(BaseModel):
             perplexity_model=os.getenv("PERPLEXITY_MODEL", "sonar-small-online"),
             perplexity_base_url=os.getenv("PERPLEXITY_BASE_URL", "https://api.perplexity.ai"),
             http_timeout_seconds=os.getenv("HTTP_TIMEOUT_SECONDS", "20"),
+            browserbase_api_key=os.getenv("BROWSERBASE_API_KEY"),
+            browserbase_project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
+            browserbase_region=os.getenv("BROWSERBASE_REGION"),
         )
 
     @property
