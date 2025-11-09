@@ -73,7 +73,7 @@ export const Signup = () => {
       <div className="hidden sm:flex sm:w-1/2 relative items-center justify-center p-12">
         <div className="text-center max-w-lg">
           <div className="flex items-center justify-center mb-8">
-            <img src="/Logo.png" alt="Grantly Logo" className="w-16 h-16 object-contain" />
+            <img src="/assets/logo.png" alt="Grantly Logo" className="h-20 w-auto" />
           </div>
           <h1 className="text-5xl font-bold text-surface-900 civic-heading mb-6">
             Join Grantly
