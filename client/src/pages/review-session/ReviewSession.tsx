@@ -1,77 +1,105 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { useApplications } from '../../hooks';
-import { useOrganization } from '../../context/OrganizationContext';
-import { generateGrantDraft } from '../../services';
+import { useApplications } from "../../hooks";
+import { useOrganization } from "../../context/OrganizationContext";
+import { generateGrantDraft } from "../../services";
 
 const formatDateTime = (date?: Date | string) => {
-  if (!date) return 'Unknown';
+  if (!date) return "Unknown";
   try {
     return new Date(date).toLocaleString();
   } catch {
-    return 'Unknown';
+    return "Unknown";
   }
 };
 
 const buildOrganizationSummary = (
-  organization:
-    | {
-        legal_business_name?: string;
-        operating_name?: string;
-        mission_statement?: string;
-        company_description?: string;
-        target_beneficiaries?: string;
-        business_sector?: string;
-        address?: string;
-      }
-    | null
+  organization: {
+    legal_business_name?: string;
+    operating_name?: string;
+    mission_statement?: string;
+    company_description?: string;
+    target_beneficiaries?: string;
+    business_sector?: string;
+    address?: string;
+  } | null
 ) => {
   if (!organization) {
-    return 'No organization profile information provided.';
+    return "No organization profile information provided.";
   }
 
   return [
-    `Organization Name: ${organization.legal_business_name || organization.operating_name}`,
-    organization.mission_statement && `Mission: ${organization.mission_statement}`,
-    organization.company_description && `About: ${organization.company_description}`,
-    organization.target_beneficiaries && `Target Beneficiaries: ${organization.target_beneficiaries}`,
+    `Organization Name: ${
+      organization.legal_business_name || organization.operating_name
+    }`,
+    organization.mission_statement &&
+      `Mission: ${organization.mission_statement}`,
+    organization.company_description &&
+      `About: ${organization.company_description}`,
+    organization.target_beneficiaries &&
+      `Target Beneficiaries: ${organization.target_beneficiaries}`,
     organization.business_sector && `Sector: ${organization.business_sector}`,
     organization.address && `Address: ${organization.address}`,
   ]
     .filter(Boolean)
-    .join('\n');
+    .join("\n");
 };
 
-const toEditableAnswers = (answers?: Record<string, unknown>): Record<string, string> => {
+const toEditableAnswers = (
+  answers?: Record<string, unknown>
+): Record<string, string> => {
   if (!answers) {
     return {};
   }
-  return Object.entries(answers).reduce<Record<string, string>>((acc, [key, value]) => {
-    if (typeof value === 'string') {
-      acc[key] = value;
-    } else {
-      acc[key] = JSON.stringify(value, null, 2);
-    }
-    return acc;
-  }, {});
+
+  return Object.entries(answers).reduce<Record<string, string>>(
+    (acc, [key, value]) => {
+      if (value == null) {
+        acc[key] = "";
+      } else if (Array.isArray(value)) {
+        acc[key] = value.join("\n");
+      } else if (typeof value === "object") {
+        acc[key] = Object.entries(value as Record<string, unknown>)
+          .map(
+            ([subKey, subValue]) =>
+              `${subKey}: ${subValue as string | number | boolean | null}`
+          )
+          .join("\n");
+      } else {
+        acc[key] = String(value);
+      }
+      return acc;
+    },
+    {}
+  );
 };
 
-const toDraftPayload = (answers: Record<string, string>): Record<string, unknown> => {
-  return Object.entries(answers).reduce<Record<string, unknown>>((acc, [key, rawValue]) => {
-    const trimmed = rawValue.trim();
-    if (!trimmed) {
-      acc[key] = '';
-      return acc;
-    }
+const toDraftPayload = (
+  answers: Record<string, string>
+): Record<string, unknown> => {
+  return Object.entries(answers).reduce<Record<string, unknown>>(
+    (acc, [key, rawValue]) => {
+      const trimmed = rawValue.trim();
+      if (!trimmed) {
+        acc[key] = "";
+        return acc;
+      }
 
-    try {
-      acc[key] = JSON.parse(trimmed);
-    } catch {
-      acc[key] = rawValue;
-    }
-    return acc;
-  }, {});
+      // If the user entered multi-line text, treat it as an array of bullet points.
+      if (trimmed.includes("\n")) {
+        acc[key] = trimmed
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+        return acc;
+      }
+
+      acc[key] = trimmed;
+      return acc;
+    },
+    {}
+  );
 };
 
 export const ReviewSession = () => {
@@ -81,7 +109,9 @@ export const ReviewSession = () => {
   const { organization } = useOrganization();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [editableAnswers, setEditableAnswers] = useState<Record<string, string>>({});
+  const [editableAnswers, setEditableAnswers] = useState<
+    Record<string, string>
+  >({});
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
 
@@ -104,12 +134,15 @@ export const ReviewSession = () => {
     return (
       <div className="p-6 lg:p-10">
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-surface-200 p-8 text-center">
-          <h1 className="text-2xl font-bold text-surface-900 mb-2">Application Not Found</h1>
+          <h1 className="text-2xl font-bold text-surface-900 mb-2">
+            Application Not Found
+          </h1>
           <p className="text-surface-600 mb-6">
-            We couldn&apos;t locate that application. It may not have been started yet.
+            We couldn&apos;t locate that application. It may not have been
+            started yet.
           </p>
           <button
-            onClick={() => navigate('/matches')}
+            onClick={() => navigate("/matches")}
             className="px-6 py-3 bg-gradient-civic text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200"
           >
             Browse Matches
@@ -126,7 +159,7 @@ export const ReviewSession = () => {
       return;
     }
     if (!application.pdfLink) {
-      setGenerationError('PDF link is not available for this application.');
+      setGenerationError("PDF link is not available for this application.");
       return;
     }
 
@@ -149,9 +182,11 @@ export const ReviewSession = () => {
 
       setEditableAnswers(toEditableAnswers(response.draft));
     } catch (error) {
-      console.error('Failed to generate draft responses', error);
+      console.error("Failed to generate draft responses", error);
       setGenerationError(
-        error instanceof Error ? error.message : 'Unable to generate draft responses. Please try again.'
+        error instanceof Error
+          ? error.message
+          : "Unable to generate draft responses. Please try again."
       );
     } finally {
       setIsGenerating(false);
@@ -168,11 +203,11 @@ export const ReviewSession = () => {
     };
     try {
       await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-      setCopyFeedback('Draft copied!');
+      setCopyFeedback("Draft copied!");
       setTimeout(() => setCopyFeedback(null), 2000);
     } catch (error) {
-      console.error('Failed to copy draft', error);
-      setCopyFeedback('Unable to copy draft');
+      console.error("Failed to copy draft", error);
+      setCopyFeedback("Unable to copy draft");
       setTimeout(() => setCopyFeedback(null), 2500);
     }
   };
@@ -185,7 +220,7 @@ export const ReviewSession = () => {
       tokensUsed: currentDraftMetadata?.tokensUsed,
     };
 
-    const printableWindow = window.open('', '_blank', 'noopener,noreferrer');
+    const printableWindow = window.open("", "_blank", "noopener,noreferrer");
     if (!printableWindow) {
       return;
     }
@@ -201,7 +236,7 @@ export const ReviewSession = () => {
           </style>
         </head>
         <body>
-          <h1>${application?.grantTitle ?? 'Grant Draft'}</h1>
+          <h1>${application?.grantTitle ?? "Grant Draft"}</h1>
           <pre>${JSON.stringify(payload, null, 2)}</pre>
         </body>
       </html>
@@ -218,11 +253,12 @@ export const ReviewSession = () => {
     const answers = toDraftPayload(editableAnswers);
     updateApplicationDraft(application.id, {
       answers,
-      model: currentDraftMetadata?.model ?? 'manual-edit',
-      generatedAt: currentDraftMetadata?.generatedAt ?? new Date().toISOString(),
+      model: currentDraftMetadata?.model ?? "manual-edit",
+      generatedAt:
+        currentDraftMetadata?.generatedAt ?? new Date().toISOString(),
       tokensUsed: currentDraftMetadata?.tokensUsed ?? null,
     });
-    setSaveFeedback('Draft saved.');
+    setSaveFeedback("Draft saved.");
     setTimeout(() => setSaveFeedback(null), 2000);
   };
 
@@ -243,14 +279,26 @@ export const ReviewSession = () => {
             onClick={() => navigate(-1)}
             className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 mb-4"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back
           </button>
 
           <div className="flex flex-col gap-4 mb-6">
-            <h1 className="text-3xl font-bold text-surface-900">{application.grantTitle}</h1>
+            <h1 className="text-3xl font-bold text-surface-900">
+              {application.grantTitle}
+            </h1>
             <div className="flex flex-wrap items-center gap-3 text-sm text-surface-600">
               <span className="px-3 py-1 rounded-full bg-primary-50 text-primary-700 font-semibold">
                 Started {formatDateTime(application.timestamp)}
@@ -277,8 +325,19 @@ export const ReviewSession = () => {
               >
                 {isGenerating ? (
                   <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" strokeWidth="4" />
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        strokeWidth="4"
+                      />
                       <path
                         className="opacity-75"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
@@ -289,7 +348,12 @@ export const ReviewSession = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      fill="none"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -308,7 +372,12 @@ export const ReviewSession = () => {
                     onClick={handleCopyDraft}
                     className="inline-flex items-center gap-2 rounded-lg border border-primary-200 px-4 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      fill="none"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -322,7 +391,12 @@ export const ReviewSession = () => {
                     onClick={handleSaveDraft}
                     className="inline-flex items-center gap-2 rounded-lg border border-secondary-200 px-4 py-2 text-sm font-semibold text-secondary-600 transition hover:bg-secondary-50"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      fill="none"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -336,7 +410,12 @@ export const ReviewSession = () => {
                     onClick={handleExportPdf}
                     className="inline-flex items-center gap-2 rounded-lg border border-secondary-200 px-4 py-2 text-sm font-semibold text-secondary-600 transition hover:bg-secondary-50"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      fill="none"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -350,7 +429,9 @@ export const ReviewSession = () => {
               )}
 
               {(copyFeedback || saveFeedback) && (
-                <span className="text-sm text-surface-500">{copyFeedback ?? saveFeedback}</span>
+                <span className="text-sm text-surface-500">
+                  {copyFeedback ?? saveFeedback}
+                </span>
               )}
             </div>
           </div>
@@ -362,7 +443,9 @@ export const ReviewSession = () => {
               </h2>
               {sessionExists ? (
                 <>
-                  <p className="text-surface-900 font-semibold">{application.sessionId}</p>
+                  <p className="text-surface-900 font-semibold">
+                    {application.sessionId}
+                  </p>
                   <div className="flex flex-col sm:flex-row gap-2 mt-4">
                     <a
                       href={application.liveViewUrl}
@@ -386,7 +469,8 @@ export const ReviewSession = () => {
                 </>
               ) : (
                 <p className="text-surface-600 text-sm">
-                  Live session metadata not available. Start the application from the Matches page to create a session.
+                  Live session metadata not available. Start the application
+                  from the Matches page to create a session.
                 </p>
               )}
             </div>
@@ -406,15 +490,26 @@ export const ReviewSession = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 border border-secondary-200 text-secondary-600 font-semibold rounded-lg hover:bg-secondary-50 transition-all duration-200 text-sm"
                   >
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     CFEP Small Sample Application PDF
                   </a>
                 </div>
               ) : (
                 <p className="text-sm text-surface-600">
-                  The PDF link will appear here once it has been captured by Browserbase.
+                  The PDF link will appear here once it has been captured by
+                  Browserbase.
                 </p>
               )}
             </div>
@@ -423,21 +518,29 @@ export const ReviewSession = () => {
 
         {draftKeys.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg border border-surface-200 p-8">
-            <h2 className="text-2xl font-bold text-surface-900 mb-4">Draft Responses</h2>
+            <h2 className="text-2xl font-bold text-surface-900 mb-4">
+              Draft Responses
+            </h2>
             <p className="text-surface-600 mb-6">
-              Review and edit the generated responses below. Changes you make can be copied or exported.
+              Review and edit the generated responses below. Changes you make
+              can be copied or exported.
             </p>
 
             <div className="space-y-4">
               {draftKeys.map((key) => (
-                <div key={key} className="border border-surface-200 rounded-lg p-4 bg-surface-50">
+                <div
+                  key={key}
+                  className="border border-surface-200 rounded-lg p-4 bg-surface-50"
+                >
                   <label className="block text-sm font-semibold text-surface-700 mb-2 uppercase tracking-wide">
-                    {key.replace(/_/g, ' ')}
+                    {key.replace(/_/g, " ")}
                   </label>
                   <textarea
                     className="w-full min-h-[120px] rounded-lg border border-surface-300 p-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                     value={editableAnswers[key]}
-                    onChange={(event) => handleAnswerChange(key, event.target.value)}
+                    onChange={(event) =>
+                      handleAnswerChange(key, event.target.value)
+                    }
                   />
                 </div>
               ))}
@@ -448,4 +551,3 @@ export const ReviewSession = () => {
     </div>
   );
 };
-
