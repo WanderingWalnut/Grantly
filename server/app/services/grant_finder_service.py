@@ -56,10 +56,11 @@ class GrantFinderService:
         """
         client = PerplexityClient(self.settings)
         max_results = filters.max_results if filters and filters.max_results else 10
-        query = self._build_search_query(organization, filters, max_results)
+        # Prefer multi-query to target specific Alberta program pages and avoid hubs
+        queries = self._build_multi_queries_for_alberta(organization, filters, max_results)
         domain_filter = ["alberta.ca"]
         response = await client.search(
-            query=query,
+            query=queries,
             max_results=max_results,
             search_domain_filter=domain_filter,
             max_tokens_per_page=2048,
@@ -153,6 +154,51 @@ class GrantFinderService:
         query_parts.append('"last updated" OR "2024" OR "2025"')
 
         return " ".join(part for part in query_parts if part)
+
+    def _build_multi_queries_for_alberta(
+        self,
+        organization: OrganizationInfo,
+        filters: Optional[GrantFilters],
+        max_results: int,
+    ) -> List[str]:
+        """
+        Build multiple focused queries to directly hit Alberta program sub-pages
+        and avoid generic hub pages.
+        """
+        province = (
+            organization.address.province
+            if organization.address and organization.address.province
+            else (filters.province if filters else None)
+        )
+
+        apply_terms = '("apply" OR "application" OR "how to apply" OR "application form" OR "apply now")'
+        common_suffix = f'{apply_terms}'
+
+        seeds: List[str] = [
+            # CFEP program pages
+            "site:alberta.ca/community-facility-enhancement-program-small",
+            "site:alberta.ca/community-facility-enhancement-program-large",
+            # CIP program pages
+            "site:alberta.ca/cip-project-based-grant",
+            "site:alberta.ca/cip-operating-grant",
+            # Cultural Heritage and Other Initiatives
+            "site:alberta.ca/cultural-heritage-initiatives-program",
+            "site:alberta.ca/other-initiatives-program",
+        ]
+
+        queries: List[str] = []
+        for base in seeds:
+            parts: List[str] = [base, common_suffix]
+            if organization.sector_tags:
+                parts.append(" ".join(organization.sector_tags))
+            # Province hint (should already be Alberta, but include if provided)
+            if province:
+                parts.append(f'"{province}"')
+            # Keep it concise; NAICS or legal name can be too specific and miss pages
+            queries.append(" ".join(p for p in parts if p))
+
+        # Limit to max_results number of queries to keep the call efficient
+        return queries[: max_results if max_results > 0 else 3]
 
 
 @lru_cache(maxsize=1)
