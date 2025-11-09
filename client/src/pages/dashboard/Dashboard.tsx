@@ -1,38 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApplications } from '../../context/ApplicationContext';
+import { useApplications } from '../../hooks';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { applications } = useApplications();
-  const successfulApplications = applications.filter(app => app.status === 'success');
+  const successfulApplications = applications.filter(
+    (app) => app.status === 'started' || app.status === 'draft'
+  );
   const [activityPage, setActivityPage] = useState(1);
   const itemsPerPage = 3;
+  const [storedMatches, setStoredMatches] = useState<Array<{ id: number; amount: string }>>([]);
   
   const totalPages = Math.ceil(successfulApplications.length / itemsPerPage);
   const startIndex = (activityPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentApplications = successfulApplications.slice(startIndex, endIndex);
 
-  // Mock data for available grants (matching Matches.tsx)
-  const allAvailableGrants = [
-    { id: 1, amount: '$500,000 - $2,000,000' },
-    { id: 2, amount: '$100,000 - $500,000' },
-    { id: 3, amount: '$50,000 - $250,000' },
-    { id: 4, amount: '$250,000 - $1,000,000' },
-    { id: 5, amount: '$25,000 - $150,000' },
-    { id: 6, amount: '$100,000 - $500,000' },
-    { id: 7, amount: '$300,000 - $750,000' },
-    { id: 8, amount: '$50,000 - $200,000' },
-    { id: 9, amount: '$75,000 - $400,000' }
-  ];
+  useEffect(() => {
+    const readMatches = () => {
+      try {
+        const raw = localStorage.getItem('grantlyMatches');
+        if (!raw) {
+          setStoredMatches([]);
+          return;
+        }
+        const parsed = JSON.parse(raw) as Array<{ id: number; amount: string }>;
+        setStoredMatches(Array.isArray(parsed) ? parsed : []);
+      } catch (error) {
+        console.warn('Unable to read stored matches from localStorage', error);
+        setStoredMatches([]);
+      }
+    };
+
+    readMatches();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'grantlyMatches') {
+        readMatches();
+      }
+    };
+
+    const handleCustomEvent = () => {
+      readMatches();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('grantlyMatchesUpdate', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('grantlyMatchesUpdate', handleCustomEvent);
+    };
+  }, []);
 
   // Calculate available grants (excluding successfully applied ones)
-  const availableGrants = allAvailableGrants.filter(grant => 
+  const availableGrants = storedMatches.filter(grant =>
     !successfulApplications.some(app => app.id === grant.id)
   );
   const availableGrantsCount = availableGrants.length;
-  const newGrantsThisWeek = 3; // This would be calculated based on grant creation dates
+  const newGrantsThisWeek = availableGrantsCount > 0 ? Math.min(availableGrantsCount, 3) : 0; // Placeholder calculation
 
   // Calculate active applications statistics
   const activeApplicationsCount = successfulApplications.length;

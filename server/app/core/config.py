@@ -23,6 +23,7 @@ class Settings(BaseModel):
     browserbase_api_key: Optional[str] = None
     browserbase_project_id: Optional[str] = None
     browserbase_region: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
     @classmethod
     def load(cls) -> "Settings":
@@ -36,6 +37,7 @@ class Settings(BaseModel):
             browserbase_api_key=os.getenv("BROWSERBASE_API_KEY"),
             browserbase_project_id=os.getenv("BROWSERBASE_PROJECT_ID"),
             browserbase_region=os.getenv("BROWSERBASE_REGION"),
+            gemini_api_key=os.getenv("GEMINI_API_KEY"),
         )
 
     @property

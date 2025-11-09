@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 import httpx
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from app.core.config import settings
 from app.models.schemas import GrantsSearchRequest, GrantsSearchResponse
@@ -14,6 +15,7 @@ from app.services.browserbase_service import (
     PdfLinkNotFoundError,
     get_pdf_link_from_grant_page,
 )
+from app.services.draft_service import DraftGenerationError, generate_draft_from_pdf
 from app.services.grant_finder_service import GrantFinderService
 
 
@@ -32,6 +34,22 @@ class GrantPdfResponse(BaseModel):
     pdf_link: HttpUrl
 
 
+class GrantDraftRequest(BaseModel):
+    pdf_link: HttpUrl
+    organization_summary: str = Field(
+        ...,
+        description="Short description of the organization and project context to guide the draft responses.",
+        min_length=10,
+    )
+
+
+class GrantDraftResponse(BaseModel):
+    draft: Dict[str, Any]
+    model: str
+    generated_at: datetime
+    tokens_used: Optional[int] = None
+
+
 @router.post("/pdf-link", response_model=GrantPdfResponse, tags=["grants"])
 async def fetch_grant_pdf_link(payload: GrantPdfRequest) -> GrantPdfResponse:
     try:
@@ -44,6 +62,26 @@ async def fetch_grant_pdf_link(payload: GrantPdfRequest) -> GrantPdfResponse:
         logger.exception("Unexpected error while retrieving PDF link for %s", payload.grant_url)
         raise HTTPException(status_code=500, detail="Failed to retrieve PDF link") from exc
     return GrantPdfResponse(**result)
+
+
+@router.post("/draft", response_model=GrantDraftResponse, tags=["grants"])
+async def generate_grant_draft(payload: GrantDraftRequest) -> GrantDraftResponse:
+    try:
+        draft_result = await generate_draft_from_pdf(str(payload.pdf_link), payload.organization_summary)
+    except DraftGenerationError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="Failed to download PDF for drafting.") from exc
+    except Exception as exc:
+        logger.exception("Unexpected error while generating grant draft for %s", payload.pdf_link)
+        raise HTTPException(status_code=500, detail="Failed to generate draft responses.") from exc
+
+    return GrantDraftResponse(
+        draft=draft_result.answers,
+        model=draft_result.model_name,
+        generated_at=datetime.utcnow(),
+        tokens_used=draft_result.used_tokens,
+    )
 
 
 @router.post("/search", response_model=GrantsSearchResponse, tags=["grants"])
