@@ -41,8 +41,8 @@ export const Signup = () => {
       }
 
       if (user) {
-        // Redirect to intake form after successful signup
-        navigate('/intake-form');
+        // Redirect to email verification page after successful signup
+        navigate('/verify-email');
       }
     } catch (err) {
       setError('An unexpected error occurred');

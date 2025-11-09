@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login, Signup, Dashboard, IntakeForm, Matches, ApplicationTracker, Profile } from './pages';
+import { Login, Signup, Dashboard, IntakeForm, Matches, ApplicationTracker, Profile, VerifyEmail } from './pages';
 import { Layout } from './components';
 import { ApplicationProvider } from './context/ApplicationContext';
 import { AuthProvider } from './context/AuthContext';
@@ -16,6 +16,7 @@ function App() {
             {/* Auth routes without layout */}
             <Route path="/" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/intake-form" element={<IntakeForm />} />
             
             {/* Main app routes with layout */}
