@@ -1,6 +1,6 @@
 import type { GrantSearchResult } from './grants';
+import { GEMINI_API_KEY } from '../config/env';
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export interface GeminiSummarizedGrant {
