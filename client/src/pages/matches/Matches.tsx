@@ -89,25 +89,37 @@ const parseEligibility = (eligibility?: string | null): string[] => {
 
 const mapGrantToMatch = (grant: GrantSearchResult, index: number): MatchCard | null => {
   if (!grant.title) return null;
-  if (grant.amount_min == null && grant.amount_max == null) return null;
-  if (!grant.sponsor) return null;
+  const link = grant.link;
+  if (!link) return null;
 
-  const amount = formatAmountRange(grant);
-  if (!amount) return null;
+  const amount =
+    formatAmountRange(grant) ?? 'See program page for award details';
+
+  let funder = grant.sponsor;
+  if (!funder) {
+    if (link.includes('alberta.ca')) {
+      funder = 'Government of Alberta';
+    } else if (link.includes('.gc.ca') || link.includes('canada.ca')) {
+      funder = 'Government of Canada';
+    } else {
+      funder = 'Program Sponsor';
+    }
+  }
 
   const description =
-    grant.summary ?? 'Learn more about this program using the program details link provided.';
+    grant.summary ??
+    'Learn more about this program using the program details link provided.';
 
   return {
-    id: hashStringToPositiveInt(grant.link ?? `${grant.title}-${index}`),
+    id: hashStringToPositiveInt(`${link}-${index}`),
     title: grant.title,
-    funder: grant.sponsor,
+    funder,
     amount,
     deadline: formatDeadline(grant.deadline),
     matchPercentage: 70 + ((index * 7) % 25),
     description,
     eligibility: parseEligibility(grant.eligibility),
-    link: grant.link,
+    link,
   };
 };
 
