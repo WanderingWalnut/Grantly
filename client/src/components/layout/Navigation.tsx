@@ -66,13 +66,11 @@ export const Navigation = ({ className = '' }: NavigationProps) => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-civic rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                <span className="text-white font-bold text-xl">G</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-surface-900 civic-heading group-hover:text-primary-600 transition-colors duration-200">Grantly</span>
-                <span className="text-xs text-surface-500 font-medium -mt-1">Grant Assistant</span>
-              </div>
+              <img 
+                src="/assets/logo.png" 
+                alt="Grantly Logo" 
+                className="h-12 w-auto transition-all duration-300 group-hover:scale-105"
+              />
             </Link>
           </div>
 
@@ -104,19 +102,9 @@ export const Navigation = ({ className = '' }: NavigationProps) => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-3">
-            <div className="hidden sm:flex items-center space-x-2 px-3 py-2 bg-surface-50 rounded-xl">
-              <div className="w-8 h-8 bg-gradient-civic rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-semibold">
-                  {organization?.legal_business_name
-                    ? organization.legal_business_name.substring(0, 2).toUpperCase()
-                    : 'OR'}
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-surface-900">
-                  {organization?.legal_business_name || 'Organization'}
-                </div>
-                <div className="text-xs text-surface-500">Active</div>
+            <div className="hidden sm:flex items-center px-4 py-2 bg-surface-50 rounded-xl">
+              <div className="text-sm font-semibold text-surface-900">
+                {organization?.legal_business_name || 'Organization'}
               </div>
             </div>
             
@@ -143,22 +131,13 @@ export const Navigation = ({ className = '' }: NavigationProps) => {
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-primary-100/50 z-50 overflow-hidden">
                     {/* User Info Section */}
                     <div className="px-4 py-3 bg-gradient-to-r from-primary-50 to-secondary-50 border-b border-primary-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-civic rounded-lg flex items-center justify-center shadow-md">
-                          <span className="text-white text-sm font-bold">
-                            {organization?.legal_business_name
-                              ? organization.legal_business_name.substring(0, 2).toUpperCase()
-                              : 'OR'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-surface-900 truncate">
-                            {organization?.legal_business_name || 'Organization'}
-                          </p>
-                          <p className="text-xs text-surface-600 truncate">
-                            {user?.email || 'user@example.com'}
-                          </p>
-                        </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-bold text-surface-900 truncate">
+                          {organization?.legal_business_name || 'Organization'}
+                        </p>
+                        <p className="text-xs text-surface-600 truncate">
+                          {user?.email || 'user@example.com'}
+                        </p>
                       </div>
                     </div>
 
