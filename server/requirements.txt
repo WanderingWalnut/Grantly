@@ -1,5 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 httpx
 python-dotenv
+pydantic
+sqlalchemy
+psycopg[binary]
 
