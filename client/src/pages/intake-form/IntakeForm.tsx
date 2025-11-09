@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const IntakeForm = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [formData, setFormData] = useState({
     organizationName: '',
     legalBusinessName: '',
@@ -28,14 +32,67 @@ export const IntakeForm = () => {
     createdAt: '',
     updatedAt: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission logic (save to backend)
-    console.log('Intake form submitted:', formData);
-    
-    // Redirect to dashboard after submission
-    navigate('/dashboard');
+    setLoading(true);
+    setError('');
+
+    if (!session?.access_token) {
+      setError('You must be logged in to submit this form');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Prepare data for API
+      const apiData = {
+        organization_name: formData.organizationName,
+        legal_business_name: formData.legalBusinessName,
+        operating_name: formData.operatingName,
+        business_number: formData.businessNumber,
+        business_structure: formData.businessStructure,
+        address: formData.address,
+        contact_information: formData.contactInformation,
+        date_of_establishment: formData.dateOfEstablishment,
+        phone_number: formData.phoneNumber,
+        email_address: formData.emailAddress,
+        number_of_employees: formData.numberOfEmployees,
+        mission_statement: formData.missionStatement,
+        company_description: formData.companyDescription,
+        target_beneficiaries: formData.targetBeneficiaries,
+        organization_type: formData.organizationType,
+        year_established: parseInt(formData.yearEstablished),
+        annual_budget: formData.annualBudget,
+      };
+
+      // Call backend API to save organization
+      const response = await fetch(`${API_BASE_URL}/api/organizations/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(apiData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail?.error || 'Failed to save organization');
+      }
+
+      const result = await response.json();
+      console.log('Organization saved:', result);
+
+      // Redirect to dashboard after successful submission
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Error saving organization:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -43,6 +100,7 @@ export const IntakeForm = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    if (error) setError('');
   };
 
   return (
@@ -76,6 +134,17 @@ export const IntakeForm = () => {
           {/* Form Container */}
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-primary-100/50 p-8 sm:p-12">
             <form onSubmit={handleSubmit} className="space-y-8">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {error}
+                  </div>
+                </div>
+              )}
+              
               {/* Section: Basic Information */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -572,13 +641,26 @@ export const IntakeForm = () => {
                 </p>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto group bg-gradient-civic text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 whitespace-nowrap"
+                  disabled={loading}
+                  className="w-full sm:w-auto group bg-gradient-civic text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <span>Submit & Continue</span>
-                    <svg className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Submit & Continue</span>
+                        <svg className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </>
+                    )}
                   </div>
                 </button>
               </div>
