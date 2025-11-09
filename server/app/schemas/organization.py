@@ -5,9 +5,8 @@ from pydantic import BaseModel, EmailStr
 
 
 class OrganizationIntakeForm(BaseModel):
-    """Schema for organization intake form data."""
+    """Schema for organization intake form data - matches database schema exactly."""
     # Basic Information
-    organization_name: str
     legal_business_name: str
     operating_name: str
     business_number: str
@@ -19,13 +18,11 @@ class OrganizationIntakeForm(BaseModel):
     email_address: EmailStr
     
     # Organization Details
-    number_of_employees: str
+    number_of_employees: int
+    business_sector: Optional[str] = None
     mission_statement: str
     company_description: str
     target_beneficiaries: str
-    organization_type: str
-    year_established: int
-    annual_budget: str
     
     # User association (will be set from auth token)
     user_id: Optional[str] = None
@@ -40,8 +37,7 @@ class OrganizationResponse(BaseModel):
 
 
 class OrganizationUpdate(BaseModel):
-    """Schema for updating organization data."""
-    organization_name: Optional[str] = None
+    """Schema for updating organization data - matches database schema exactly."""
     legal_business_name: Optional[str] = None
     operating_name: Optional[str] = None
     business_number: Optional[str] = None
@@ -51,10 +47,8 @@ class OrganizationUpdate(BaseModel):
     date_of_establishment: Optional[date] = None
     phone_number: Optional[str] = None
     email_address: Optional[EmailStr] = None
-    number_of_employees: Optional[str] = None
+    number_of_employees: Optional[int] = None
+    business_sector: Optional[str] = None
     mission_statement: Optional[str] = None
     company_description: Optional[str] = None
     target_beneficiaries: Optional[str] = None
-    organization_type: Optional[str] = None
-    year_established: Optional[int] = None
-    annual_budget: Optional[str] = None

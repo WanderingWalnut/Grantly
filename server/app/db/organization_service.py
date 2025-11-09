@@ -24,10 +24,9 @@ class OrganizationService:
         Returns:
             Dict containing the created organization
         """
-        # Prepare data for insertion
+        # Prepare data for insertion - match database schema exactly
         org_data = {
             "user_id": user_id,
-            "organization_name": data.get("organization_name"),
             "legal_business_name": data.get("legal_business_name"),
             "operating_name": data.get("operating_name"),
             "business_number": data.get("business_number"),
@@ -38,12 +37,10 @@ class OrganizationService:
             "phone_number": data.get("phone_number"),
             "email_address": data.get("email_address"),
             "number_of_employees": data.get("number_of_employees"),
+            "business_sector": data.get("business_sector"),
             "mission_statement": data.get("mission_statement"),
             "company_description": data.get("company_description"),
-            "target_beneficiaries": data.get("target_beneficiaries"),
-            "organization_type": data.get("organization_type"),
-            "year_established": data.get("year_established"),
-            "annual_budget": data.get("annual_budget")
+            "target_beneficiaries": data.get("target_beneficiaries")
         }
         
         # Insert into Supabase

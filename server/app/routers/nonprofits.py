@@ -63,7 +63,7 @@ async def create_organization(
         return OrganizationResponse(
             id=result["id"],
             user_id=result["user_id"],
-            organization_name=result["organization_name"]
+            organization_name=result.get("operating_name", result.get("legal_business_name", ""))
         )
     except Exception as e:
         raise HTTPException(
@@ -72,10 +72,40 @@ async def create_organization(
         )
 
 
+@router.get("/me")
+async def get_my_organization(user_id: str = Depends(get_current_user_id)):
+    """
+    Get organization profile for current user.
+    
+    Args:
+        user_id: Authenticated user's ID (from token)
+        
+    Returns:
+        Organization data
+    """
+    try:
+        result = await organization_service.get_organization_by_user(user_id)
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="No organization found for this user"
+            )
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "Failed to fetch organization", "detail": str(e)}
+        )
+
+
 @router.get("/")
 async def get_organization(user_id: str = Depends(get_current_user_id)):
     """
-    Get organization profile for current user.
+    Get organization profile for current user (alias for /me).
     
     Args:
         user_id: Authenticated user's ID (from token)
