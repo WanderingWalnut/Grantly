@@ -1,0 +1,41 @@
+from __future__ import annotations
+
+import os
+from functools import lru_cache
+from typing import Literal, Optional
+
+from dotenv import load_dotenv
+from pydantic import BaseModel, Field, HttpUrl
+
+load_dotenv()
+
+
+class Settings(BaseModel):
+    mode: Literal["mock", "live"] = Field(default="mock")
+    perplexity_api_key: Optional[str] = None
+    perplexity_model: str = Field(default="sonar-small-online")
+    perplexity_base_url: HttpUrl = Field(default="https://api.perplexity.ai")
+    http_timeout_seconds: int = Field(default=20)
+
+    @classmethod
+    def load(cls) -> "Settings":
+        mode_value = os.getenv("GRANT_FINDER_MODE", "mock") or "mock"
+        return cls(
+            mode=mode_value.strip().lower(),
+            perplexity_api_key=os.getenv("PERPLEXITY_API_KEY"),
+            perplexity_model=os.getenv("PERPLEXITY_MODEL", "sonar-small-online"),
+            perplexity_base_url=os.getenv("PERPLEXITY_BASE_URL", "https://api.perplexity.ai"),
+            http_timeout_seconds=os.getenv("HTTP_TIMEOUT_SECONDS", "20"),
+        )
+
+    @property
+    def is_mock_mode(self) -> bool:
+        return self.mode == "mock"
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings.load()
+
+
+settings = get_settings()

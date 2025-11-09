@@ -1,0 +1,63 @@
+[
+  {
+    "title": "Canada Summer Jobs",
+    "link": "https://www.canada.ca/en/employment-social-development/services/funding/canada-summer-jobs.html",
+    "summary": "Wage subsidies to help employers create summer job opportunities for youth.",
+    "eligibility": "Not-for-profit employers and public sector; private sector with restrictions.",
+    "deadline": null,
+    "amount_min": 0,
+    "amount_max": 300000,
+    "currency": "CAD",
+    "sponsor": "Government of Canada",
+    "program": "Canada Summer Jobs",
+    "region": "National",
+    "tags": [
+      "youth",
+      "employment"
+    ],
+    "source_citations": [
+      "https://www.canada.ca/en/employment-social-development/services/funding/canada-summer-jobs.html"
+    ]
+  },
+  {
+    "title": "New Horizons for Seniors Program",
+    "link": "https://www.canada.ca/en/employment-social-development/services/funding/new-horizons-seniors-community-based.html",
+    "summary": "Funding for projects that make a difference in the lives of seniors.",
+    "eligibility": "Non-profits, municipalities, Indigenous organizations, and others.",
+    "deadline": null,
+    "amount_min": 1000,
+    "amount_max": 25000,
+    "currency": "CAD",
+    "sponsor": "Government of Canada",
+    "program": "NHSP",
+    "region": "National",
+    "tags": [
+      "seniors",
+      "community"
+    ],
+    "source_citations": [
+      "https://www.canada.ca/en/employment-social-development/services/funding/new-horizons-seniors-community-based.html"
+    ]
+  },
+  {
+    "title": "Investment Readiness Program",
+    "link": "https://ised-isde.canada.ca/site/strategic-policy-sector/en/social-innovation-social-finance-strategy/investment-readiness-program",
+    "summary": "Supports social purpose organizations to become investment ready.",
+    "eligibility": "Nonprofits, charities, co-ops, and social enterprises.",
+    "deadline": null,
+    "amount_min": 10000,
+    "amount_max": 75000,
+    "currency": "CAD",
+    "sponsor": "Government of Canada",
+    "program": "IRP",
+    "region": "National",
+    "tags": [
+      "social finance",
+      "capacity building"
+    ],
+    "source_citations": [
+      "https://ised-isde.canada.ca/site/strategic-policy-sector/en/social-innovation-social-finance-strategy/investment-readiness-program"
+    ]
+  }
+]
+
