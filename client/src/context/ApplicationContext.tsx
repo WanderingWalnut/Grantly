@@ -10,15 +10,24 @@ export interface Application {
   timestamp: Date;
 }
 
+export interface SuccessMessage {
+  id: number;
+  grantTitle: string;
+}
+
 interface ApplicationContextType {
   applications: Application[];
   addApplication: (application: Application) => void;
+  successMessages: SuccessMessage[];
+  addSuccessMessage: (message: SuccessMessage) => void;
+  removeSuccessMessage: (id: number) => void;
 }
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
 export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [successMessages, setSuccessMessages] = useState<SuccessMessage[]>([]);
 
   const addApplication = (application: Application) => {
     setApplications(prev => {
@@ -37,8 +46,22 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addSuccessMessage = (message: SuccessMessage) => {
+    setSuccessMessages(prev => [...prev, message]);
+  };
+
+  const removeSuccessMessage = (id: number) => {
+    setSuccessMessages(prev => prev.filter(msg => msg.id !== id));
+  };
+
   return (
-    <ApplicationContext.Provider value={{ applications, addApplication }}>
+    <ApplicationContext.Provider value={{ 
+      applications, 
+      addApplication, 
+      successMessages, 
+      addSuccessMessage, 
+      removeSuccessMessage 
+    }}>
       {children}
     </ApplicationContext.Provider>
   );
