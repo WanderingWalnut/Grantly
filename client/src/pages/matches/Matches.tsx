@@ -207,9 +207,21 @@ export const Matches = () => {
 
           setMatches(matchCards);
           setVisibleCount(3);
+          try {
+            localStorage.setItem('grantlyMatches', JSON.stringify(matchCards));
+            window.dispatchEvent(new Event('grantlyMatchesUpdate'));
+          } catch (storageError) {
+            console.warn('Unable to persist matches to localStorage', storageError);
+          }
         } else {
           // Gemini returned empty array - no matches to show
           setMatches([]);
+          try {
+            localStorage.setItem('grantlyMatches', JSON.stringify([]));
+            window.dispatchEvent(new Event('grantlyMatchesUpdate'));
+          } catch (storageError) {
+            console.warn('Unable to persist matches to localStorage', storageError);
+          }
           console.warn('Gemini returned no summaries after filtering duplicates.');
         }
       } catch (error) {
@@ -217,6 +229,12 @@ export const Matches = () => {
         console.error('Error processing grants with Gemini:', error);
         setMatches([]);
         setLoadError('Failed to process grant results. Please try again.');
+        try {
+          localStorage.setItem('grantlyMatches', JSON.stringify([]));
+          window.dispatchEvent(new Event('grantlyMatchesUpdate'));
+        } catch (storageError) {
+          console.warn('Unable to persist matches to localStorage', storageError);
+        }
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -225,6 +243,12 @@ export const Matches = () => {
         setLoadError('An unexpected error occurred while finding matches.');
       }
       setMatches([]);
+      try {
+        localStorage.setItem('grantlyMatches', JSON.stringify([]));
+        window.dispatchEvent(new Event('grantlyMatchesUpdate'));
+      } catch (storageError) {
+        console.warn('Unable to persist matches to localStorage', storageError);
+      }
     } finally {
       setIsLoadingMatches(false);
     }
