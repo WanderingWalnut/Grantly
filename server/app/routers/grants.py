@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
+import httpx
 
 from app.core.config import settings
 from app.models.schemas import GrantsSearchRequest, GrantsSearchResponse
@@ -18,6 +19,20 @@ async def search_grants(payload: GrantsSearchRequest) -> GrantsSearchResponse:
         grants = await service.find_grants(payload.organization, payload.filters)
     except NotImplementedError as exc:
         raise HTTPException(status_code=501, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except httpx.HTTPStatusError as exc:
+        detail = {
+            "message": "Perplexity API returned an error.",
+            "status_code": exc.response.status_code,
+            "response_text": exc.response.text,
+        }
+        raise HTTPException(status_code=502, detail=detail) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Error contacting Perplexity API: {exc}",
+        ) from exc
 
     return GrantsSearchResponse(
         mode=settings.mode,
