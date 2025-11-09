@@ -1,25 +1,8 @@
 import { useState } from 'react';
+import { OrganizationProfileForm } from '../../components/forms/OrganizationProfileForm';
 
 export const Profile = () => {
   const [activeTab, setActiveTab] = useState<'organization' | 'preferences' | 'security'>('organization');
-  
-  // Mock data for organization profile
-  const [organizationData, setOrganizationData] = useState({
-    name: 'Community Care Initiative',
-    ein: '12-3456789',
-    email: 'contact@communitycare.org',
-    phone: '(555) 123-4567',
-    website: 'https://communitycare.org',
-    address: '123 Main Street',
-    city: 'Springfield',
-    state: 'IL',
-    zipCode: '62701',
-    missionStatement: 'Dedicated to improving community health and wellness through innovative programs and partnerships.',
-    focusAreas: ['Health & Wellness', 'Community Development', 'Youth Programs'],
-    organizationType: 'nonprofit',
-    yearEstablished: '2015',
-    annualBudget: '$250,000 - $500,000'
-  });
 
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
@@ -109,74 +92,7 @@ export const Profile = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-surface-700 mb-2">Organization Name</label>
-              <input
-                type="text"
-                value={organizationData.name}
-                onChange={(e) => setOrganizationData({...organizationData, name: e.target.value})}
-                className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 text-lg"
-                placeholder="Enter organization name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-surface-700 mb-2">EIN (Tax ID)</label>
-              <input
-                type="text"
-                value={organizationData.ein}
-                onChange={(e) => setOrganizationData({...organizationData, ein: e.target.value})}
-                className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 text-lg"
-                placeholder="XX-XXXXXXX"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-surface-700 mb-2">Email Address</label>
-              <input
-                type="email"
-                value={organizationData.email}
-                onChange={(e) => setOrganizationData({...organizationData, email: e.target.value})}
-                className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 text-lg"
-                placeholder="contact@organization.org"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-surface-700 mb-2">Phone Number</label>
-              <input
-                type="tel"
-                value={organizationData.phone}
-                onChange={(e) => setOrganizationData({...organizationData, phone: e.target.value})}
-                className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 text-lg"
-                placeholder="(555) 123-4567"
-              />
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <label className="block text-sm font-bold text-surface-700 mb-3">Mission Statement</label>
-            <textarea
-              rows={6}
-              value={organizationData.missionStatement}
-              onChange={(e) => setOrganizationData({...organizationData, missionStatement: e.target.value})}
-              className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 text-lg resize-none"
-              placeholder="Describe your organization's mission and goals..."
-            />
-          </div>
-          
-          <div className="mt-10 flex justify-between items-center">
-            <div className="text-sm text-surface-600">
-              Last updated: <span className="font-semibold">Never</span>
-            </div>
-            <button className="group px-8 py-4 bg-gradient-civic text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-              <svg className="-ml-1 mr-3 h-5 w-5 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Save Changes
-            </button>
-          </div>
+          <OrganizationProfileForm />
         </div>
       )}
 

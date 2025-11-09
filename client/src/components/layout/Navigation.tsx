@@ -1,4 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useOrganization } from '../../context/OrganizationContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavigationProps {
   className?: string;
@@ -6,6 +9,15 @@ interface NavigationProps {
 
 export const Navigation = ({ className = '' }: NavigationProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { organization } = useOrganization();
+  const { signOut, user } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const navItems = [
     {
@@ -94,20 +106,90 @@ export const Navigation = ({ className = '' }: NavigationProps) => {
           <div className="flex items-center space-x-3">
             <div className="hidden sm:flex items-center space-x-2 px-3 py-2 bg-surface-50 rounded-xl">
               <div className="w-8 h-8 bg-gradient-civic rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-semibold">CC</span>
+                <span className="text-white text-xs font-semibold">
+                  {organization?.organization_name
+                    ? organization.organization_name.substring(0, 2).toUpperCase()
+                    : 'OR'}
+                </span>
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold text-surface-900">Community Care</div>
+                <div className="text-sm font-semibold text-surface-900">
+                  {organization?.organization_name || 'Organization'}
+                </div>
                 <div className="text-xs text-surface-500">Active</div>
               </div>
             </div>
             
             <div className="relative">
-              <button className="p-2.5 text-surface-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200 hover:shadow-md">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2.5 text-surface-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200 hover:shadow-md"
+              >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
+
+              {/* Dropdown Menu */}
+              {isMenuOpen && (
+                <>
+                  {/* Backdrop to close menu when clicking outside */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  
+                  {/* Menu Content */}
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-primary-100/50 z-50 overflow-hidden">
+                    {/* User Info Section */}
+                    <div className="px-4 py-3 bg-gradient-to-r from-primary-50 to-secondary-50 border-b border-primary-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-civic rounded-lg flex items-center justify-center shadow-md">
+                          <span className="text-white text-sm font-bold">
+                            {organization?.organization_name
+                              ? organization.organization_name.substring(0, 2).toUpperCase()
+                              : 'OR'}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-surface-900 truncate">
+                            {organization?.organization_name || 'Organization'}
+                          </p>
+                          <p className="text-xs text-surface-600 truncate">
+                            {user?.email || 'user@example.com'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-200"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="font-medium">Account Settings</span>
+                      </Link>
+
+                      <div className="border-t border-surface-200 my-2"></div>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span className="font-medium">Log Out</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
