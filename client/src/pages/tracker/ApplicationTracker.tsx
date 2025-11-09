@@ -17,6 +17,12 @@ interface TrackerApplication {
   sessionId?: string;
   liveViewUrl?: string;
   pdfLink?: string;
+  draft?: {
+    answers: Record<string, unknown>;
+    model?: string;
+    generatedAt?: string;
+    tokensUsed?: number | null;
+  };
 }
 
 export const ApplicationTracker = () => {
@@ -26,19 +32,22 @@ export const ApplicationTracker = () => {
 
   // Convert context applications to tracker format
   const realApplications: TrackerApplication[] = contextApplications
-    .filter(app => app.status === 'started')
+    .filter(app => app.status === 'started' || app.status === 'draft')
     .map(app => ({
       id: app.id,
       grantTitle: app.grantTitle,
       funder: app.funder,
       amount: app.amount,
-      status: 'started' as ApplicationStatus,
+      status: (app.status === 'draft' ? 'draft' : 'started') as ApplicationStatus,
       submittedDate: new Date(app.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }),
-      progress: 25,
-      nextSteps: 'Complete application form and gather required documents',
+      progress: app.status === 'draft' ? 60 : 25,
+      nextSteps: app.status === 'draft'
+        ? 'Review generated draft responses, make edits, and prepare submission.'
+        : 'Complete application form and gather required documents',
       sessionId: app.sessionId,
       liveViewUrl: app.liveViewUrl,
       pdfLink: app.pdfLink,
+      draft: app.draft,
     }));
 
   // Mock data for other statuses (keeping some examples)
@@ -221,6 +230,28 @@ export const ApplicationTracker = () => {
                         </div>
                       </div>
                     )}
+                    {application.draft && (
+                      <div className="md:col-span-3 bg-secondary-50 rounded-lg p-2.5 border border-secondary-200">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                          <div>
+                            <div className="text-xs font-medium text-secondary-600 uppercase tracking-wide">
+                              Draft Responses
+                            </div>
+                            <div className="text-sm text-surface-900 font-semibold">
+                              Generated {application.draft.generatedAt ?? 'recently'} ({application.draft.model ?? 'Gemini'})
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => navigate(`/applications/${application.id}`)}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-civic text-white hover:shadow-md transition-colors"
+                            >
+                              Review Draft
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -272,6 +303,16 @@ export const ApplicationTracker = () => {
                       className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200"
                     >
                       Open Workspace
+                    </button>
+                  </div>
+                )}
+                {application.status === 'draft' && (
+                  <div className="flex gap-3 flex-wrap">
+                    <button
+                      onClick={() => navigate(`/applications/${application.id}`)}
+                      className="px-4 py-2 bg-gradient-civic text-white font-semibold rounded-civic hover:shadow-civic-md transition-all duration-200"
+                    >
+                      Review Draft Responses
                     </button>
                   </div>
                 )}

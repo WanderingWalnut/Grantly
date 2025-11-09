@@ -5,7 +5,9 @@ import { useApplications } from '../../hooks';
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { applications } = useApplications();
-  const successfulApplications = applications.filter(app => app.status === 'started');
+  const successfulApplications = applications.filter(
+    (app) => app.status === 'started' || app.status === 'draft'
+  );
   const [activityPage, setActivityPage] = useState(1);
   const itemsPerPage = 3;
   const [storedMatches, setStoredMatches] = useState<Array<{ id: number; amount: string }>>([]);
@@ -53,7 +55,7 @@ export const Dashboard = () => {
   }, []);
 
   // Calculate available grants (excluding successfully applied ones)
-  const availableGrants = storedMatches.filter(grant => 
+  const availableGrants = storedMatches.filter(grant =>
     !successfulApplications.some(app => app.id === grant.id)
   );
   const availableGrantsCount = availableGrants.length;

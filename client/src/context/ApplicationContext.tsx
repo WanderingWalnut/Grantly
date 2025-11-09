@@ -13,19 +13,45 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
 
   const addApplication = (application: Application) => {
     setApplications((prev) => {
-      // Check if an application with this ID already exists
       const existingIndex = prev.findIndex((app) => app.id === application.id);
 
       if (existingIndex !== -1) {
-        // Replace the existing application (for retries)
+        const existing = prev[existingIndex];
+        const merged: Application = {
+          ...existing,
+          ...application,
+          draft: application.draft ?? existing.draft,
+          sessionId: application.sessionId ?? existing.sessionId,
+          liveViewUrl: application.liveViewUrl ?? existing.liveViewUrl,
+          pdfLink: application.pdfLink ?? existing.pdfLink,
+        };
         const updated = [...prev];
-        updated[existingIndex] = application;
+        updated[existingIndex] = merged;
         return updated;
-      } else {
-        // Add new application
-        return [application, ...prev];
       }
+
+      return [application, ...prev];
     });
+  };
+
+  const updateApplicationDraft = (id: number, draft: Application["draft"]) => {
+    if (!draft) {
+      return;
+    }
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === id
+          ? {
+              ...app,
+              status:
+                app.status === "failed"
+                  ? "draft"
+                  : ("draft" as Application["status"]),
+              draft,
+            }
+          : app
+      )
+    );
   };
 
   const addSuccessMessage = (message: SuccessMessage) => {
@@ -41,6 +67,7 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       value={{
         applications,
         addApplication,
+        updateApplicationDraft,
         successMessages,
         addSuccessMessage,
         removeSuccessMessage,

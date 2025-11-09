@@ -50,6 +50,18 @@ export interface GrantSearchResponse {
   generated_at: string;
 }
 
+export interface GrantDraftRequest {
+  pdf_link: string;
+  organization_summary: string;
+}
+
+export interface GrantDraftResponse {
+  draft: Record<string, unknown>;
+  model: string;
+  generated_at: string;
+  tokens_used?: number | null;
+}
+
 export async function searchGrants(request: GrantSearchRequest): Promise<GrantSearchResponse> {
   const endpoint = new URL('/api/grants/search', API_BASE_URL).toString();
   const init: RequestInit = {
@@ -88,5 +100,25 @@ export function buildDefaultGrantSearchRequest(): GrantSearchRequest {
       max_results: 10,     // Increased from 3 to 10
     },
   };
+}
+
+export async function generateGrantDraft(request: GrantDraftRequest): Promise<GrantDraftResponse> {
+  const endpoint = new URL('/api/grants/draft', API_BASE_URL).toString();
+  const init: RequestInit = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  };
+
+  const response = await fetch(new Request(endpoint, init));
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Failed to generate draft: ${response.status} ${detail || ''}`.trim());
+  }
+
+  return response.json();
 }
 

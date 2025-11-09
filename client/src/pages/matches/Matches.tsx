@@ -115,7 +115,9 @@ export const Matches = () => {
   const filteredMatches = useMemo(() => {
     return matches.filter((match) => {
       const alreadyStarted = applications.some(
-        (app) => app.id === match.id && app.status === "started"
+        (app) =>
+          app.id === match.id &&
+          (app.status === "started" || app.status === "draft")
       );
       if (alreadyStarted) return false;
 
@@ -333,7 +335,11 @@ export const Matches = () => {
         <div className="flex items-center gap-3">
           {applications.length > 0 && (
             <span className="text-sm text-surface-600">
-              {applications.filter((a) => a.status === "started").length}{" "}
+              {
+                applications.filter(
+                  (a) => a.status === "started" || a.status === "draft"
+                ).length
+              }{" "}
               applications started
             </span>
           )}
@@ -636,7 +642,11 @@ export const Matches = () => {
                         match.amount
                       )
                     }
-                    disabled={isProcessing || appStatus?.status === "started"}
+                    disabled={
+                      isProcessing ||
+                      appStatus?.status === "started" ||
+                      appStatus?.status === "draft"
+                    }
                     className="group flex items-center px-4 py-2 bg-gradient-civic text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     {isProcessing ? (
@@ -665,6 +675,8 @@ export const Matches = () => {
                     ) : appStatus ? (
                       appStatus.status === "started" ? (
                         "Application Started"
+                      ) : appStatus.status === "draft" ? (
+                        "Draft Generated"
                       ) : (
                         <>
                           <svg
@@ -703,31 +715,33 @@ export const Matches = () => {
                     )}
                   </button>
 
-                  {appStatus?.status === "started" && appStatus.liveViewUrl && (
-                    <a
-                      href={appStatus.liveViewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center px-4 py-2 border border-primary-200 text-primary-600 font-semibold rounded-lg hover:bg-primary-50 hover:border-primary-300 transition-all duration-300 text-sm"
-                    >
-                      <svg
-                        className="-ml-1 mr-2 h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                  {appStatus &&
+                    appStatus.liveViewUrl &&
+                    appStatus.status !== "failed" && (
+                      <a
+                        href={appStatus.liveViewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center px-4 py-2 border border-primary-200 text-primary-600 font-semibold rounded-lg hover:bg-primary-50 hover:border-primary-300 transition-all duration-300 text-sm"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 10l4.553-1.138a1 1 0 01.894 1.73l-11 9a1 1 0 01-1.447-1.083L9 14.5 5.553 9.39a1 1 0 011.447-1.083L11 10l.277-4.168a1 1 0 011.76-.63l1.963 2.62A1 1 0 0015.277 9H15v1z"
-                        />
-                      </svg>
-                      View Live Session
-                    </a>
-                  )}
+                        <svg
+                          className="-ml-1 mr-2 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 10l4.553-1.138a1 1 0 01.894 1.73l-11 9a1 1 0 01-1.447-1.083L9 14.5 5.553 9.39a1 1 0 011.447-1.083L11 10l.277-4.168a1 1 0 011.76-.63l1.963 2.62A1 1 0 0015.277 9H15v1z"
+                          />
+                        </svg>
+                        View Live Session
+                      </a>
+                    )}
 
-                  {appStatus?.status === "started" && (
+                  {appStatus && appStatus.status !== "failed" && (
                     <button
                       onClick={() => navigate(`/applications/${match.id}`)}
                       className="flex items-center px-4 py-2 border border-secondary-200 text-secondary-600 font-semibold rounded-lg hover:bg-secondary-50 hover:border-secondary-300 transition-all duration-300 text-sm"
