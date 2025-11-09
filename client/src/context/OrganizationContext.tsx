@@ -75,12 +75,12 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateOrganization = async (data: Partial<Organization>): Promise<boolean> => {
-    if (!session?.access_token || !organization?.id) {
+    if (!session?.access_token) {
       return false;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/organizations/${organization.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/organizations/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
