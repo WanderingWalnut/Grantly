@@ -10,7 +10,6 @@ export const IntakeForm = () => {
   const { session } = useAuth();
   const { organization, refreshOrganization } = useOrganization();
   const [formData, setFormData] = useState({
-    organizationName: '',
     legalBusinessName: '',
     operatingName: '',
     businessNumber: '',
@@ -21,18 +20,10 @@ export const IntakeForm = () => {
     phoneNumber: '',
     emailAddress: '',
     numberOfEmployees: '',
+    businessSector: '',
     missionStatement: '',
     companyDescription: '',
     targetBeneficiaries: '',
-    organizationType: '',
-    yearEstablished: '',
-    annualBudget: '',
-    focusAreas: '',
-    previousGrants: '',
-    websiteUrl: '',
-    taxId: '',
-    createdAt: '',
-    updatedAt: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -49,9 +40,8 @@ export const IntakeForm = () => {
     }
 
     try {
-      // Prepare data for API
+      // Prepare data for API - match database schema exactly
       const apiData = {
-        organization_name: formData.organizationName,
         legal_business_name: formData.legalBusinessName,
         operating_name: formData.operatingName,
         business_number: formData.businessNumber,
@@ -61,13 +51,11 @@ export const IntakeForm = () => {
         date_of_establishment: formData.dateOfEstablishment,
         phone_number: formData.phoneNumber,
         email_address: formData.emailAddress,
-        number_of_employees: formData.numberOfEmployees,
+        number_of_employees: parseInt(formData.numberOfEmployees) || 1,
+        business_sector: formData.businessSector || null,
         mission_statement: formData.missionStatement,
         company_description: formData.companyDescription,
         target_beneficiaries: formData.targetBeneficiaries,
-        organization_type: formData.organizationType,
-        year_established: parseInt(formData.yearEstablished),
-        annual_budget: formData.annualBudget,
       };
 
       // Call backend API to save organization
@@ -202,30 +190,6 @@ export const IntakeForm = () => {
                     </svg>
                   </div>
                   <h2 className="text-2xl font-bold text-surface-900">Basic Information</h2>
-                </div>
-
-                {/* Organization Name */}
-                <div>
-                  <label htmlFor="organizationName" className="block text-sm font-bold text-surface-700 mb-2">
-                    Organization Name *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      name="organizationName"
-                      id="organizationName"
-                      required
-                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
-                      placeholder="Enter your organization name"
-                      value={formData.organizationName}
-                      onChange={handleChange}
-                    />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -436,39 +400,6 @@ export const IntakeForm = () => {
                   </div>
                 </div>
 
-                {/* Organization Type */}
-                <div>
-                  <label htmlFor="organizationType" className="block text-sm font-bold text-surface-700 mb-2">
-                    Organization Type *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                    </div>
-                    <select
-                      name="organizationType"
-                      id="organizationType"
-                      required
-                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
-                      value={formData.organizationType}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select type</option>
-                      <option value="nonprofit">Nonprofit</option>
-                      <option value="charity">Charity</option>
-                      <option value="foundation">Foundation</option>
-                      <option value="educational">Educational Institution</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Mission Statement */}
                 <div>
                   <label htmlFor="missionStatement" className="block text-sm font-bold text-surface-700 mb-2">
@@ -579,32 +510,6 @@ export const IntakeForm = () => {
                       />
                     </div>
                   </div>
-
-                  {/* Year Established */}
-                  <div>
-                    <label htmlFor="yearEstablished" className="block text-sm font-bold text-surface-700 mb-2">
-                      Year Established *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <input
-                        type="number"
-                        name="yearEstablished"
-                        id="yearEstablished"
-                        required
-                        min="1800"
-                        max={new Date().getFullYear()}
-                        className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
-                        placeholder="YYYY"
-                        value={formData.yearEstablished}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 {/* Number of Employees */}
@@ -618,60 +523,40 @@ export const IntakeForm = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
-                    <select
+                    <input
+                      type="number"
                       name="numberOfEmployees"
                       id="numberOfEmployees"
                       required
-                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
+                      min="1"
+                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
+                      placeholder="Enter number of employees"
                       value={formData.numberOfEmployees}
                       onChange={handleChange}
-                    >
-                      <option value="">Select range</option>
-                      <option value="1-10">1-10</option>
-                      <option value="11-50">11-50</option>
-                      <option value="51-200">51-200</option>
-                      <option value="201-500">201-500</option>
-                      <option value="500+">500+</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                    />
                   </div>
                 </div>
 
-                {/* Annual Budget */}
+                {/* Business Sector */}
                 <div>
-                  <label htmlFor="annualBudget" className="block text-sm font-bold text-surface-700 mb-2">
-                    Annual Budget *
+                  <label htmlFor="businessSector" className="block text-sm font-bold text-surface-700 mb-2">
+                    Business Sector (Optional)
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <select
-                      name="annualBudget"
-                      id="annualBudget"
-                      required
-                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
-                      value={formData.annualBudget}
+                    <input
+                      type="text"
+                      name="businessSector"
+                      id="businessSector"
+                      className="w-full pl-12 pr-4 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
+                      placeholder="e.g., Healthcare, Education, Environmental"
+                      value={formData.businessSector}
                       onChange={handleChange}
-                    >
-                      <option value="">Select range</option>
-                      <option value="under-100k">Under $100,000</option>
-                      <option value="100k-500k">$100,000 - $500,000</option>
-                      <option value="500k-1m">$500,000 - $1,000,000</option>
-                      <option value="1m-5m">$1,000,000 - $5,000,000</option>
-                      <option value="5m+">$5,000,000+</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                    />
                   </div>
                 </div>
               </div>
