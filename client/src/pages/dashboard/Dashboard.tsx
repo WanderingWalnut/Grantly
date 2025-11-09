@@ -7,7 +7,7 @@ export const Dashboard = () => {
   const { applications } = useApplications();
   const successfulApplications = applications.filter(app => app.status === 'success');
   const [activityPage, setActivityPage] = useState(1);
-  const itemsPerPage = 4;
+  const itemsPerPage = 3;
   
   const totalPages = Math.ceil(successfulApplications.length / itemsPerPage);
   const startIndex = (activityPage - 1) * itemsPerPage;
@@ -68,38 +68,38 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6 h-screen overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-surface-900">Dashboard</h1>
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-surface-900">Dashboard</h1>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
         {/* Stat Card 1 - Available Grants */}
         <div 
           onClick={() => navigate('/matches')}
-          className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[160px] cursor-pointer group"
+          className="bg-white rounded-xl shadow-md border border-surface-200 p-4 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[120px] cursor-pointer group"
         >
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors duration-300">
-              <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors duration-300">
+              <svg className="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">{availableGrantsCount}</div>
+            <div className="text-2xl font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">{availableGrantsCount}</div>
           </div>
           <div className="flex items-end justify-between">
-            <div className="flex items-center text-sm">
+            <div className="flex items-center text-xs">
               <svg className="w-4 h-4 mr-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
               <span className="text-green-600 font-semibold">+{newGrantsThisWeek}</span>
               <span className="text-surface-500 ml-1">this week</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-right text-sm font-medium text-surface-600">Available Grants</span>
-              <svg className="w-4 h-4 text-surface-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-1.5">
+              <span className="text-right text-xs font-medium text-surface-600">Available Grants</span>
+              <svg className="w-3.5 h-3.5 text-surface-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
@@ -109,24 +109,24 @@ export const Dashboard = () => {
         {/* Stat Card 2 - Active Applications */}
         <div 
           onClick={() => navigate('/tracker')}
-          className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[160px] cursor-pointer group"
+          className="bg-white rounded-xl shadow-md border border-surface-200 p-4 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[120px] cursor-pointer group"
         >
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-secondary-100 rounded-xl group-hover:bg-secondary-200 transition-colors duration-300">
-              <svg className="h-6 w-6 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 bg-secondary-100 rounded-lg group-hover:bg-secondary-200 transition-colors duration-300">
+              <svg className="h-5 w-5 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900 group-hover:text-secondary-600 transition-colors duration-300">{activeApplicationsCount}</div>
+            <div className="text-2xl font-bold text-surface-900 group-hover:text-secondary-600 transition-colors duration-300">{activeApplicationsCount}</div>
           </div>
           <div className="flex items-end justify-between">
-            <div className="flex items-center text-sm text-surface-600">
+            <div className="flex items-center text-xs text-surface-600">
               <span className="font-semibold">{underReviewCount}</span>
               <span className="ml-1">under review</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-right text-sm font-medium text-surface-600">Active Applications</span>
-              <svg className="w-4 h-4 text-surface-400 group-hover:text-secondary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-1.5">
+              <span className="text-right text-xs font-medium text-surface-600">Active Applications</span>
+              <svg className="w-3.5 h-3.5 text-surface-400 group-hover:text-secondary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
@@ -134,32 +134,31 @@ export const Dashboard = () => {
         </div>
 
         {/* Stat Card 3 - Potential Funding */}
-        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+        <div className="bg-white rounded-xl shadow-md border border-surface-200 p-4 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[120px]">
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-accent-100 rounded-xl">
-              <svg className="h-6 w-6 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 bg-accent-100 rounded-lg">
+              <svg className="h-5 w-5 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">{formatCurrency(totalPotentialFunding)}</div>
+            <div className="text-2xl font-bold text-surface-900">{formatCurrency(totalPotentialFunding)}</div>
           </div>
           <div className="flex items-end justify-between">
-            <div className="flex items-center text-sm text-surface-600">
+            <div className="flex items-center text-xs text-surface-600">
               <span className="font-semibold">{formatCurrency(highProbabilityFunding)}</span>
               <span className="ml-1">high probability</span>
             </div>
-            <div className="text-right text-sm font-medium text-surface-600">Potential Funding</div>
+            <div className="text-right text-xs font-medium text-surface-600">Potential Funding</div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-primary-100/50">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-surface-900 civic-heading">Recent Activity</h3>
+      {/* Recent Activity */}
+      <div className="max-h-[400px]">
+        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-xl border border-primary-100/50 flex flex-col h-full">
+          <div className="p-4 flex-shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-surface-900 civic-heading">Recent Activity</h3>
               {successfulApplications.length > 0 && (
                 <div className="flex items-center gap-2">
                   <button 
@@ -188,61 +187,61 @@ export const Dashboard = () => {
             </div>
             
             {successfulApplications.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="mx-auto h-20 w-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
-                  <svg className="h-10 w-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-center py-6 flex-1 flex flex-col items-center justify-center">
+                <div className="mx-auto h-12 w-12 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                  <svg className="h-6 w-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-surface-900 civic-heading mb-3">Ready to get started?</h3>
-                <p className="text-lg text-surface-600 civic-text max-w-md mx-auto mb-8">
+                <h3 className="text-base font-bold text-surface-900 civic-heading mb-2">Ready to get started?</h3>
+                <p className="text-xs text-surface-600 civic-text max-w-md mx-auto mb-3">
                   Let our AI assistant help you find and apply for grants that match your organization perfectly.
                 </p>
                 <button 
                   onClick={() => navigate('/matches')}
-                  className="group inline-flex items-center px-8 py-4 bg-gradient-civic text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
+                  className="group inline-flex items-center px-5 py-2.5 bg-gradient-civic text-white font-bold rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
                 >
-                  <svg className="-ml-1 mr-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="-ml-1 mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   Start Your First Application
                 </button>
               </div>
             ) : (
-              <div className="space-y-3 py-4">
+              <div className="space-y-2 max-h-[280px] overflow-y-auto px-4 pb-4">
                 {currentApplications.map((app) => (
-                  <div key={app.id} className="group relative bg-gradient-to-r from-white to-green-50/30 rounded-xl border border-green-100 hover:border-green-200 hover:shadow-md transition-all duration-300 overflow-hidden">
+                  <div key={app.id} className="group relative bg-gradient-to-r from-white to-green-50/30 rounded-lg border border-green-100 hover:border-green-200 hover:shadow-md transition-all duration-300 overflow-hidden">
                     <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-green-400 to-green-600"></div>
-                    <div className="flex items-start gap-4 p-4 pl-5">
-                      <div className="flex-shrink-0 p-2.5 bg-green-100 rounded-xl group-hover:bg-green-200 group-hover:scale-110 transition-all duration-300 shadow-sm">
-                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="flex items-start gap-3 p-3 pl-4">
+                      <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg group-hover:bg-green-200 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <h4 className="text-base font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-200 leading-tight">{app.grantTitle}</h4>
-                          <span className="flex-shrink-0 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg">
-                            Application Started
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <h4 className="text-sm font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-200 leading-tight">{app.grantTitle}</h4>
+                          <span className="flex-shrink-0 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded">
+                            Started
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-surface-600 mb-2">
-                          <div className="flex items-center gap-1.5">
-                            <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="flex items-center gap-2 text-xs text-surface-600 mb-1.5">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <span className="font-medium">{app.funder}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <svg className="w-4 h-4 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="flex items-center gap-1 text-xs">
+                            <svg className="w-3.5 h-3.5 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="font-semibold text-accent-700">{app.amount}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-surface-500">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="flex items-center gap-1 text-xs text-surface-500">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             {new Date(app.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -253,86 +252,12 @@ export const Dashboard = () => {
                   </div>
                 ))}
                 {currentApplications.length === 0 && activityPage > 1 && (
-                  <div className="text-center py-8 text-surface-500">
+                  <div className="text-center py-4 text-surface-500 text-sm">
                     No applications on this page
                   </div>
                 )}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="space-y-6">
-          <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-secondary-100/50 p-6">
-            <h4 className="text-lg font-bold text-surface-900 civic-heading mb-4">Quick Actions</h4>
-            <div className="space-y-3">
-              <button 
-                onClick={() => navigate('/matches')}
-                className="w-full flex items-center px-4 py-3 text-left bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors duration-200 group"
-              >
-                <div className="p-2 bg-primary-500 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-semibold text-surface-900">Find Grants</div>
-                  <div className="text-sm text-surface-600">Browse matching opportunities</div>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => navigate('/tracker')}
-                className="w-full flex items-center px-4 py-3 text-left bg-secondary-50 hover:bg-secondary-100 rounded-xl transition-colors duration-200 group"
-              >
-                <div className="p-2 bg-secondary-500 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-semibold text-surface-900">Track Applications</div>
-                  <div className="text-sm text-surface-600">Monitor your progress</div>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => navigate('/profile')}
-                className="w-full flex items-center px-4 py-3 text-left bg-accent-50 hover:bg-accent-100 rounded-xl transition-colors duration-200 group"
-              >
-                <div className="p-2 bg-accent-600 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-semibold text-surface-900">Update Profile</div>
-                  <div className="text-sm text-surface-600">Keep info current</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Tips Card */}
-          <div className="relative overflow-hidden bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-primary-100/50 hover:shadow-2xl transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-secondary-500/5"></div>
-            <div className="relative p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 p-3 bg-gradient-civic rounded-xl shadow-lg">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-lg text-surface-900 civic-heading mb-2">Professional Tip</h4>
-                  <p className="text-sm text-surface-600 civic-text leading-relaxed">
-                    Complete your organization profile to get more accurate grant matches and improve your success rate.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
