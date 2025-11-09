@@ -1,12 +1,14 @@
 import type { GrantSearchResult } from './grants';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export interface GeminiSummarizedGrant {
   title: string;
   funder: string;
-  amount: string;
+  amount_display: string;
+  amount_min: number | null;
+  amount_max: number | null;
   summary: string;
   eligibility: string[];
   deadline: string;
@@ -48,13 +50,16 @@ const buildPrompt = (results: GrantSearchResult[]): string => {
     'You are a grants analyst summarizing funding opportunities for a nonprofit.',
     'Review the following JSON array of grants and pick the best matches.',
     'Rules:',
-    '- Return a JSON array with each grant formatted as: { "title", "funder", "amount", "summary", "eligibility": string[], "deadline", "link" }.',
-    '- amount should be a short human readable range (e.g. "$25,000 - $100,000 CAD" or "Up to $50,000 CAD").',
-    '- Include up to 5 grants. Drop anything that is clearly a directory or announcement unless it contains a direct program with application instructions.',
-    '- eligibility should be 2-4 concise bullet phrases.',
-    '- summary should be at most two sentences, focused on what the program funds.',
-    '- Ensure link points directly to the program application or official details page.',
-    '- If no suitable grants are present, return an empty JSON array.',
+    '- Return a JSON array with each grant formatted exactly like:',
+    '[{"title":"Example Program","link":"https://example.org/program","funder":"Example Funder","amount_min":0,"amount_max":125000,"amount_display":"Up to $125,000 CAD","summary":"Two-sentence overview of the funding purpose.","eligibility":["Eligible org type 1","Eligible org type 2"],"deadline":"Rolling deadline"}]',
+    '- amount_min and amount_max must be numbers (no strings). Use 0 for minimum when a lower bound is not provided. If only a single value like "up to $125,000" is mentioned, set amount_min to 0 and amount_max to 125000.',
+    '- amount_display should be a concise human-readable string (e.g. "$25,000 - $100,000 CAD" or "Up to $50,000 CAD").',
+    '- summary should be no more than two sentences describing what the program funds.',
+    '- eligibility should be an array of 2-4 short bullet phrases; omit duplicative or irrelevant text.',
+    '- deadline should capture the most relevant upcoming deadline or use "Rolling deadline" when unspecified.',
+    '- Ensure link points directly to the program page or official application instructions.',
+    '- Do not wrap the JSON in code fences or add explanatory text outside the JSON.',
+    '- If no suitable grants are present, return an empty JSON array [] with no additional text.',
     '',
     'Raw grants JSON:',
     JSON.stringify(compactResults, null, 2),
@@ -80,7 +85,19 @@ const tryParseJsonArray = (text: string): GeminiSummarizedGrant[] => {
         .map((item) => ({
           title: String(item.title ?? '').trim(),
           funder: String(item.funder ?? '').trim(),
-          amount: String(item.amount ?? '').trim(),
+          amount_display: String(item.amount_display ?? item.amount ?? '').trim(),
+          amount_min:
+            typeof item.amount_min === 'number'
+              ? item.amount_min
+              : item.amount_min != null
+              ? Number(item.amount_min)
+              : null,
+          amount_max:
+            typeof item.amount_max === 'number'
+              ? item.amount_max
+              : item.amount_max != null
+              ? Number(item.amount_max)
+              : null,
           summary: String(item.summary ?? '').trim(),
           eligibility: Array.isArray(item.eligibility)
             ? item.eligibility.map((entry: unknown) => String(entry ?? '').trim()).filter(Boolean)
@@ -88,7 +105,7 @@ const tryParseJsonArray = (text: string): GeminiSummarizedGrant[] => {
           deadline: String(item.deadline ?? '').trim(),
           link: String(item.link ?? '').trim(),
         }))
-        .filter((grant) => grant.title && grant.summary && grant.link);
+        .filter((grant) => grant.title && grant.link);
     }
   } catch {
     // swallow parse errors; fallback handled by caller
@@ -156,7 +173,9 @@ export async function summarizeGrantResultsWithGemini(
     return urlMatches.map((url, index) => ({
       title: `Grant Opportunity ${index + 1}`,
       funder: '',
-      amount: '',
+      amount_display: '',
+      amount_min: null,
+      amount_max: null,
       summary: '',
       eligibility: [],
       deadline: '',
@@ -168,7 +187,9 @@ export async function summarizeGrantResultsWithGemini(
     {
       title: 'Summary',
       funder: '',
-      amount: '',
+      amount_display: '',
+      amount_min: null,
+      amount_max: null,
       summary: text,
       eligibility: [],
       deadline: '',

@@ -87,6 +87,40 @@ const parseEligibility = (eligibility?: string | null): string[] => {
   return [...new Set(tokens)];
 };
 
+const formatAmountFromNumbers = (min: number | null | undefined, max: number | null | undefined): string | null => {
+  if (min == null && max == null) {
+    return null;
+  }
+
+  if (min != null && max != null) {
+    if (min === max) {
+      return currencyFormatter.format(min);
+    }
+    return `${currencyFormatter.format(min)} - ${currencyFormatter.format(max)}`;
+  }
+
+  if (max != null) {
+    return `Up to ${currencyFormatter.format(max)}`;
+  }
+
+  if (min != null) {
+    return `Minimum ${currencyFormatter.format(min)}`;
+  }
+
+  return null;
+};
+
+const normalizeLink = (value: string | undefined | null): string | null => {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.origin}${normalizedPath}`;
+  } catch {
+    return value.trim().replace(/\/+$/, '');
+  }
+};
+
 const mapGrantToMatch = (grant: GrantSearchResult, index: number): MatchCard | null => {
   if (!grant.title) return null;
   const link = grant.link;
@@ -229,6 +263,49 @@ export const Matches = () => {
         try {
           const summaries = await summarizeGrantResultsWithGemini(response.results);
           setGeminiSummaries(summaries);
+
+          if (summaries.length) {
+            const summariesByLink = new Map<string, GeminiSummarizedGrant>();
+            summaries.forEach((summary) => {
+              const normalizedLink = normalizeLink(summary.link);
+              if (normalizedLink) {
+                summariesByLink.set(normalizedLink, summary);
+              }
+            });
+
+            if (summariesByLink.size > 0) {
+              setMatches(prevMatches =>
+                prevMatches.map((match) => {
+                  const summary = summariesByLink.get(normalizeLink(match.link) ?? '');
+                  if (!summary) {
+                    return match;
+                  }
+
+                  const amountFromSummary =
+                    summary.amount_display?.trim() ||
+                    formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
+                    match.amount;
+
+                  const descriptionFromSummary = summary.summary?.trim() || match.description;
+                  const eligibilityFromSummary =
+                    summary.eligibility && summary.eligibility.length > 0
+                      ? summary.eligibility
+                      : match.eligibility;
+                  const deadlineFromSummary = summary.deadline?.trim() || match.deadline;
+                  const funderFromSummary = summary.funder?.trim() || match.funder;
+
+                  return {
+                    ...match,
+                    amount: amountFromSummary,
+                    description: descriptionFromSummary,
+                    eligibility: eligibilityFromSummary,
+                    deadline: deadlineFromSummary,
+                    funder: funderFromSummary,
+                  };
+                })
+              );
+            }
+          }
         } catch (error) {
           if (error instanceof Error) {
             setGeminiError(error.message);
@@ -525,6 +602,10 @@ export const Matches = () => {
                 {geminiSummaries.map((summary, index) => {
                   const key = summary.link || `${summary.title}-${index}`;
                   const eligibility = summary.eligibility?.slice(0, 3) ?? [];
+                  const amountDisplay =
+                    summary.amount_display?.trim() ||
+                    formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
+                    '';
                   return (
                     <li key={key} className="rounded-lg border border-surface-200 bg-surface-50 p-3">
                       <div className="flex flex-col gap-1">
@@ -540,8 +621,8 @@ export const Matches = () => {
                         ) : (
                           <span className="text-sm font-semibold text-surface-700">{summary.title}</span>
                         )}
-                        {summary.amount && (
-                          <span className="text-xs font-medium text-surface-500">{summary.amount}</span>
+                        {amountDisplay && (
+                          <span className="text-xs font-medium text-surface-500">{amountDisplay}</span>
                         )}
                         {summary.summary && (
                           <p className="text-sm text-surface-600">{summary.summary}</p>
