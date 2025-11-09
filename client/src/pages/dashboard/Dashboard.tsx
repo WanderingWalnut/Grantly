@@ -76,15 +76,18 @@ export const Dashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-10">
-        {/* Stat Card 1 */}
-        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+        {/* Stat Card 1 - Available Grants */}
+        <div 
+          onClick={() => navigate('/matches')}
+          className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[160px] cursor-pointer group"
+        >
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-primary-100 rounded-xl">
+            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors duration-300">
               <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">{availableGrantsCount}</div>
+            <div className="text-3xl font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">{availableGrantsCount}</div>
           </div>
           <div className="flex items-end justify-between">
             <div className="flex items-center text-sm">
@@ -94,30 +97,43 @@ export const Dashboard = () => {
               <span className="text-green-600 font-semibold">+{newGrantsThisWeek}</span>
               <span className="text-surface-500 ml-1">this week</span>
             </div>
-            <div className="text-right text-sm font-medium text-surface-600">Available Grants</div>
+            <div className="flex items-center gap-2">
+              <span className="text-right text-sm font-medium text-surface-600">Available Grants</span>
+              <svg className="w-4 h-4 text-surface-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* Stat Card 2 */}
-        <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
+        {/* Stat Card 2 - Active Applications */}
+        <div 
+          onClick={() => navigate('/tracker')}
+          className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[160px] cursor-pointer group"
+        >
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-secondary-100 rounded-xl">
+            <div className="p-3 bg-secondary-100 rounded-xl group-hover:bg-secondary-200 transition-colors duration-300">
               <svg className="h-6 w-6 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
-            <div className="text-3xl font-bold text-surface-900">{activeApplicationsCount}</div>
+            <div className="text-3xl font-bold text-surface-900 group-hover:text-secondary-600 transition-colors duration-300">{activeApplicationsCount}</div>
           </div>
           <div className="flex items-end justify-between">
             <div className="flex items-center text-sm text-surface-600">
               <span className="font-semibold">{underReviewCount}</span>
               <span className="ml-1">under review</span>
             </div>
-            <div className="text-right text-sm font-medium text-surface-600">Active Applications</div>
+            <div className="flex items-center gap-2">
+              <span className="text-right text-sm font-medium text-surface-600">Active Applications</span>
+              <svg className="w-4 h-4 text-surface-400 group-hover:text-secondary-600 group-hover:translate-x-1 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* Stat Card 3 */}
+        {/* Stat Card 3 - Potential Funding */}
         <div className="bg-white rounded-2xl shadow-md border border-surface-200 p-6 hover:shadow-lg transition-shadow flex flex-col justify-between min-h-[160px]">
           <div className="flex items-start justify-between">
             <div className="p-3 bg-accent-100 rounded-xl">
@@ -251,7 +267,10 @@ export const Dashboard = () => {
           <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-secondary-100/50 p-6">
             <h4 className="text-lg font-bold text-surface-900 civic-heading mb-4">Quick Actions</h4>
             <div className="space-y-3">
-              <button className="w-full flex items-center px-4 py-3 text-left bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors duration-200 group">
+              <button 
+                onClick={() => navigate('/matches')}
+                className="w-full flex items-center px-4 py-3 text-left bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors duration-200 group"
+              >
                 <div className="p-2 bg-primary-500 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -263,10 +282,13 @@ export const Dashboard = () => {
                 </div>
               </button>
               
-              <button className="w-full flex items-center px-4 py-3 text-left bg-secondary-50 hover:bg-secondary-100 rounded-xl transition-colors duration-200 group">
+              <button 
+                onClick={() => navigate('/tracker')}
+                className="w-full flex items-center px-4 py-3 text-left bg-secondary-50 hover:bg-secondary-100 rounded-xl transition-colors duration-200 group"
+              >
                 <div className="p-2 bg-secondary-500 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
                 <div>
@@ -275,10 +297,14 @@ export const Dashboard = () => {
                 </div>
               </button>
               
-              <button className="w-full flex items-center px-4 py-3 text-left bg-accent-50 hover:bg-accent-100 rounded-xl transition-colors duration-200 group">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="w-full flex items-center px-4 py-3 text-left bg-accent-50 hover:bg-accent-100 rounded-xl transition-colors duration-200 group"
+              >
                 <div className="p-2 bg-accent-600 rounded-lg mr-3 group-hover:scale-105 transition-transform duration-200">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
