@@ -6,7 +6,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 interface Organization {
   id: string;
   user_id: string;
-  organization_name: string;
   legal_business_name: string;
   operating_name: string;
   business_number: string;
@@ -16,13 +15,11 @@ interface Organization {
   date_of_establishment: string;
   phone_number: string;
   email_address: string;
-  number_of_employees: string;
+  number_of_employees: number;
+  business_sector: string;
   mission_statement: string;
   company_description: string;
   target_beneficiaries: string;
-  organization_type: string;
-  year_established: number;
-  annual_budget: string;
   created_at?: string;
   updated_at?: string;
 }

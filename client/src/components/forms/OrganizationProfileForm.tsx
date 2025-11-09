@@ -5,7 +5,6 @@ import { useOrganization } from '../../context/OrganizationContext';
 export const OrganizationProfileForm = () => {
   const { organization, updateOrganization, loading: orgLoading } = useOrganization();
   const [formData, setFormData] = useState({
-    organizationName: '',
     legalBusinessName: '',
     operatingName: '',
     businessNumber: '',
@@ -15,13 +14,11 @@ export const OrganizationProfileForm = () => {
     dateOfEstablishment: '',
     phoneNumber: '',
     emailAddress: '',
-    numberOfEmployees: '',
+    numberOfEmployees: '0',
+    businessSector: '',
     missionStatement: '',
     companyDescription: '',
     targetBeneficiaries: '',
-    organizationType: '',
-    yearEstablished: '',
-    annualBudget: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -31,7 +28,6 @@ export const OrganizationProfileForm = () => {
   useEffect(() => {
     if (organization) {
       setFormData({
-        organizationName: organization.organization_name || '',
         legalBusinessName: organization.legal_business_name || '',
         operatingName: organization.operating_name || '',
         businessNumber: organization.business_number || '',
@@ -41,13 +37,11 @@ export const OrganizationProfileForm = () => {
         dateOfEstablishment: organization.date_of_establishment || '',
         phoneNumber: organization.phone_number || '',
         emailAddress: organization.email_address || '',
-        numberOfEmployees: organization.number_of_employees || '',
+        numberOfEmployees: organization.number_of_employees?.toString() || '0',
+        businessSector: organization.business_sector || '',
         missionStatement: organization.mission_statement || '',
         companyDescription: organization.company_description || '',
         targetBeneficiaries: organization.target_beneficiaries || '',
-        organizationType: organization.organization_type || '',
-        yearEstablished: organization.year_established?.toString() || '',
-        annualBudget: organization.annual_budget || '',
       });
     }
   }, [organization]);
@@ -61,7 +55,6 @@ export const OrganizationProfileForm = () => {
     try {
       // Prepare data for API
       const apiData = {
-        organization_name: formData.organizationName,
         legal_business_name: formData.legalBusinessName,
         operating_name: formData.operatingName,
         business_number: formData.businessNumber,
@@ -71,13 +64,11 @@ export const OrganizationProfileForm = () => {
         date_of_establishment: formData.dateOfEstablishment,
         phone_number: formData.phoneNumber,
         email_address: formData.emailAddress,
-        number_of_employees: formData.numberOfEmployees,
+        number_of_employees: parseInt(formData.numberOfEmployees) || 0,
+        business_sector: formData.businessSector,
         mission_statement: formData.missionStatement,
         company_description: formData.companyDescription,
         target_beneficiaries: formData.targetBeneficiaries,
-        organization_type: formData.organizationType,
-        year_established: parseInt(formData.yearEstablished),
-        annual_budget: formData.annualBudget,
       };
 
       const result = await updateOrganization(apiData);
@@ -223,23 +214,6 @@ export const OrganizationProfileForm = () => {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-surface-900">Basic Information</h2>
-        </div>
-
-        {/* Organization Name */}
-        <div>
-          <label htmlFor="organizationName" className="block text-sm font-bold text-surface-700 mb-2">
-            Organization Name *
-          </label>
-          <input
-            type="text"
-            name="organizationName"
-            id="organizationName"
-            required
-            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
-            placeholder="Enter your organization name"
-            value={formData.organizationName}
-            onChange={handleChange}
-          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -388,27 +362,6 @@ export const OrganizationProfileForm = () => {
           />
         </div>
 
-        {/* Organization Type */}
-        <div>
-          <label htmlFor="organizationType" className="block text-sm font-bold text-surface-700 mb-2">
-            Organization Type *
-          </label>
-          <select
-            name="organizationType"
-            id="organizationType"
-            required
-            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
-            value={formData.organizationType}
-            onChange={handleChange}
-          >
-            <option value="">Select type</option>
-            <option value="nonprofit">Nonprofit</option>
-            <option value="charity">Charity</option>
-            <option value="foundation">Foundation</option>
-            <option value="educational">Educational Institution</option>
-          </select>
-        </div>
-
         {/* Mission Statement */}
         <div>
           <label htmlFor="missionStatement" className="block text-sm font-bold text-surface-700 mb-2">
@@ -491,25 +444,6 @@ export const OrganizationProfileForm = () => {
               onChange={handleChange}
             />
           </div>
-
-          {/* Year Established */}
-          <div>
-            <label htmlFor="yearEstablished" className="block text-sm font-bold text-surface-700 mb-2">
-              Year Established *
-            </label>
-            <input
-              type="number"
-              name="yearEstablished"
-              id="yearEstablished"
-              required
-              min="1800"
-              max={new Date().getFullYear()}
-              className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
-              placeholder="YYYY"
-              value={formData.yearEstablished}
-              onChange={handleChange}
-            />
-          </div>
         </div>
 
         {/* Number of Employees */}
@@ -517,43 +451,33 @@ export const OrganizationProfileForm = () => {
           <label htmlFor="numberOfEmployees" className="block text-sm font-bold text-surface-700 mb-2">
             Number of Employees *
           </label>
-          <select
+          <input
+            type="number"
             name="numberOfEmployees"
             id="numberOfEmployees"
             required
-            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
+            min="0"
+            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
+            placeholder="Enter number of employees"
             value={formData.numberOfEmployees}
             onChange={handleChange}
-          >
-            <option value="">Select range</option>
-            <option value="1-10">1-10</option>
-            <option value="11-50">11-50</option>
-            <option value="51-200">51-200</option>
-            <option value="201-500">201-500</option>
-            <option value="500+">500+</option>
-          </select>
+          />
         </div>
 
-        {/* Annual Budget */}
+        {/* Business Sector */}
         <div>
-          <label htmlFor="annualBudget" className="block text-sm font-bold text-surface-700 mb-2">
-            Annual Budget *
+          <label htmlFor="businessSector" className="block text-sm font-bold text-surface-700 mb-2">
+            Business Sector
           </label>
-          <select
-            name="annualBudget"
-            id="annualBudget"
-            required
-            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300 appearance-none"
-            value={formData.annualBudget}
+          <input
+            type="text"
+            name="businessSector"
+            id="businessSector"
+            className="w-full px-6 py-4 bg-surface-50 border-2 border-surface-200 rounded-2xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all duration-300"
+            placeholder="e.g., Education, Healthcare, Environmental"
+            value={formData.businessSector}
             onChange={handleChange}
-          >
-            <option value="">Select range</option>
-            <option value="under-100k">Under $100,000</option>
-            <option value="100k-500k">$100,000 - $500,000</option>
-            <option value="500k-1m">$500,000 - $1,000,000</option>
-            <option value="1m-5m">$1,000,000 - $5,000,000</option>
-            <option value="5m+">$5,000,000+</option>
-          </select>
+          />
         </div>
       </div>
 

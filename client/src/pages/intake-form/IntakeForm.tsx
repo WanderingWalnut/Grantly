@@ -140,7 +140,7 @@ export const IntakeForm = () => {
                   <div className="flex-1">
                     <h4 className="text-lg font-bold text-blue-900 mb-2">Organization Profile Already Exists</h4>
                     <p className="text-blue-800 mb-4">
-                      You already have an organization profile for <span className="font-semibold">{organization.organization_name}</span>. 
+                      You already have an organization profile for <span className="font-semibold">{organization.legal_business_name}</span>. 
                       You can edit your existing profile in Settings instead of creating a new one.
                     </p>
                     <div className="flex gap-3">
