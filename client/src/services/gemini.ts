@@ -35,33 +35,41 @@ const truncate = (value: string | null | undefined, maxLength = MAX_FIELD_LENGTH
 
 const buildPrompt = (results: GrantSearchResult[]): string => {
   const compactResults = results.slice(0, MAX_INPUT_GRANTS).map((grant) => ({
-    title: grant.title,
-    sponsor: grant.sponsor,
-    amount_min: grant.amount_min,
-    amount_max: grant.amount_max,
-    currency: grant.currency,
-    deadline: grant.deadline,
-    summary: truncate(grant.summary),
-    eligibility: truncate(grant.eligibility),
+    title: grant.title || 'Untitled Grant',
     link: grant.link,
+    snippet: truncate(grant.summary || ''),
+    raw_eligibility: truncate(grant.eligibility || ''),
+    raw_deadline: grant.deadline || null,
+    raw_amount_min: grant.amount_min,
+    raw_amount_max: grant.amount_max,
+    raw_sponsor: grant.sponsor || null,
   }));
 
   return [
-    'You are a grants analyst summarizing funding opportunities for a nonprofit.',
-    'Review the following JSON array of grants and pick the best matches.',
-    'Rules:',
-    '- Return a JSON array with each grant formatted exactly like:',
-    '[{"title":"Example Program","link":"https://example.org/program","funder":"Example Funder","amount_min":0,"amount_max":125000,"amount_display":"Up to $125,000 CAD","summary":"Two-sentence overview of the funding purpose.","eligibility":["Eligible org type 1","Eligible org type 2"],"deadline":"Rolling deadline"}]',
-    '- amount_min and amount_max must be numbers (no strings). Use 0 for minimum when a lower bound is not provided. If only a single value like "up to $125,000" is mentioned, set amount_min to 0 and amount_max to 125000.',
-    '- amount_display should be a concise human-readable string (e.g. "$25,000 - $100,000 CAD" or "Up to $50,000 CAD").',
-    '- summary should be no more than two sentences describing what the program funds.',
-    '- eligibility should be an array of 2-4 short bullet phrases; omit duplicative or irrelevant text.',
-    '- deadline should capture the most relevant upcoming deadline or use "Rolling deadline" when unspecified.',
-    '- Ensure link points directly to the program page or official application instructions.',
-    '- Do not wrap the JSON in code fences or add explanatory text outside the JSON.',
-    '- If no suitable grants are present, return an empty JSON array [] with no additional text.',
+    'You are a grants analyst extracting structured data from Perplexity grant search results.',
+    'Analyze the snippet text from each grant and extract the following information:',
     '',
-    'Raw grants JSON:',
+    'CRITICAL: Return ONLY a JSON array. No markdown, no code fences, no explanatory text, no backticks.',
+    'Start your response with [ and end with ].',
+    '',
+    'For each grant, extract and return:',
+    '- title: The grant program name (use the provided title if snippet is unclear)',
+    '- link: The exact URL provided',
+    '- funder: Organization name sponsoring the grant (extract from snippet if not provided)',
+    '- amount_min: Minimum amount as a number (use 0 if only maximum is mentioned, null if no amount found)',
+    '- amount_max: Maximum amount as a number (null if no amount found)',
+    '- amount_display: Human-readable string like "$0 - $125,000 CAD" or "Up to $50,000 CAD"',
+    '  * Parse phrases like "up to $125,000" → amount_min: 0, amount_max: 125000, amount_display: "Up to $125,000 CAD"',
+    '  * Parse "$25,000 - $100,000" → amount_min: 25000, amount_max: 100000, amount_display: "$25,000 - $100,000 CAD"',
+    '  * Parse "$50,000" → amount_min: 50000, amount_max: 50000, amount_display: "$50,000 CAD"',
+    '- summary: Condensed description in 2-3 sentences about what the program funds',
+    '- eligibility: Array of 2-4 short eligibility requirement phrases (extract from snippet)',
+    '- deadline: Specific deadline date if mentioned, or "Rolling deadline" if unspecified',
+    '',
+    'Example output format (return ONLY the JSON array, nothing else):',
+    '[{"title":"Community Heritage Program","link":"https://example.org/program","funder":"Heritage Foundation","amount_min":0,"amount_max":125000,"amount_display":"Up to $125,000 CAD","summary":"This program supports community heritage projects. Funding is available for preservation and educational initiatives.","eligibility":["Registered nonprofits","Heritage organizations","Community groups"],"deadline":"March 31, 2024"}]',
+    '',
+    'Input grants:',
     JSON.stringify(compactResults, null, 2),
   ].join('\n');
 };
@@ -75,6 +83,24 @@ const extractTextFromResponse = (payload: GeminiGenerateContentResponse): string
     .map(part => part.text ?? '')
     .join('')
     .trim();
+};
+
+const extractJsonArray = (text: string): string | null => {
+  if (!text) return null;
+  
+  // Try to parse directly first (in case responseMimeType worked)
+  try {
+    const parsed = JSON.parse(text.trim());
+    if (Array.isArray(parsed)) {
+      return text.trim();
+    }
+  } catch {
+    // Not valid JSON, continue to regex extraction
+  }
+  
+  // Fallback: extract JSON array from text (handles markdown code fences)
+  const arrayMatch = text.match(/\[[\s\S]*\]/);
+  return arrayMatch ? arrayMatch[0] : null;
 };
 
 const tryParseJsonArray = (text: string): GeminiSummarizedGrant[] => {
@@ -147,7 +173,8 @@ export async function summarizeGrantResultsWithGemini(
         temperature: 0.1,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
       },
     }),
   });
@@ -159,41 +186,18 @@ export async function summarizeGrantResultsWithGemini(
 
   const payload: GeminiGenerateContentResponse = await response.json();
   const text = extractTextFromResponse(payload);
-  if (!text) {
+  const arrayText = extractJsonArray(text);
+  if (!arrayText) {
+    // If Gemini fails to return valid JSON, return empty array (no fallback to raw data)
+    console.warn('Gemini did not return valid JSON array. Response:', text.substring(0, 200));
     return [];
   }
 
-  const parsed = tryParseJsonArray(text);
+  const parsed = tryParseJsonArray(arrayText);
   if (parsed.length) {
     return parsed;
   }
 
-  const urlMatches = Array.from(new Set(text.match(/https?:\/\/[^\s"'<>]+/g) ?? []));
-  if (urlMatches.length) {
-    return urlMatches.map((url, index) => ({
-      title: `Grant Opportunity ${index + 1}`,
-      funder: '',
-      amount_display: '',
-      amount_min: null,
-      amount_max: null,
-      summary: '',
-      eligibility: [],
-      deadline: '',
-      link: url,
-    }));
-  }
-
-  return [
-    {
-      title: 'Summary',
-      funder: '',
-      amount_display: '',
-      amount_min: null,
-      amount_max: null,
-      summary: text,
-      eligibility: [],
-      deadline: '',
-      link: '',
-    },
-  ];
+  // If parsing succeeded but array is empty, return empty array (no fallback)
+  return [];
 }

@@ -127,7 +127,7 @@ const mapGrantToMatch = (grant: GrantSearchResult, index: number): MatchCard | n
   if (!link) return null;
 
   const amount =
-    formatAmountRange(grant) ?? 'See program page for award details';
+    formatAmountRange(grant) ?? '';
 
   let funder = grant.sponsor;
   if (!funder) {
@@ -140,9 +140,7 @@ const mapGrantToMatch = (grant: GrantSearchResult, index: number): MatchCard | n
     }
   }
 
-  const description =
-    grant.summary ??
-    'Learn more about this program using the program details link provided.';
+  const description = grant.summary ?? '';
 
   return {
     id: hashStringToPositiveInt(`${link}-${index}`),
@@ -164,9 +162,6 @@ export const Matches = () => {
   const [visibleCount, setVisibleCount] = useState(3);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [geminiSummaries, setGeminiSummaries] = useState<GeminiSummarizedGrant[]>([]);
-  const [geminiError, setGeminiError] = useState<string | null>(null);
-  const [isSummarizing, setIsSummarizing] = useState(false);
   const { applications, addApplication, addSuccessMessage } = useApplications();
 
   const filteredMatches = useMemo(() => {
@@ -244,25 +239,31 @@ export const Matches = () => {
   const handleFindMatches = async () => {
     setIsLoadingMatches(true);
     setLoadError(null);
-    setGeminiError(null);
-    setGeminiSummaries([]);
 
     try {
       const payload = buildDefaultGrantSearchRequest();
       const response = await searchGrants(payload);
-      const normalized = response.results
+      
+      // Create initial match cards with empty Gemini fields (will be populated if Gemini succeeds)
+      const normalizedRaw = response.results
         .map((grant, index) => mapGrantToMatch(grant, index))
         .filter((match): match is MatchCard => match !== null);
 
-      setMatches(normalized);
+      // Initialize matches with empty description/amount to confirm Gemini is working
+      const initialMatches: MatchCard[] = normalizedRaw.map((match) => ({
+        ...match,
+        description: '', // Empty until Gemini populates
+        amount: '', // Empty until Gemini populates
+      }));
+
+      setMatches(initialMatches);
       setVisibleCount(3);
       setProcessingId(null);
 
+      // Process with Gemini after fetching Perplexity results
       if (response.results.length > 0) {
-        setIsSummarizing(true);
         try {
           const summaries = await summarizeGrantResultsWithGemini(response.results);
-          setGeminiSummaries(summaries);
 
           if (summaries.length) {
             const summariesByLink = new Map<string, GeminiSummarizedGrant>();
@@ -273,47 +274,56 @@ export const Matches = () => {
               }
             });
 
-            if (summariesByLink.size > 0) {
-              setMatches(prevMatches =>
-                prevMatches.map((match) => {
-                  const summary = summariesByLink.get(normalizeLink(match.link) ?? '');
-                  if (!summary) {
-                    return match;
-                  }
-
-                  const amountFromSummary =
-                    summary.amount_display?.trim() ||
-                    formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
-                    match.amount;
-
-                  const descriptionFromSummary = summary.summary?.trim() || match.description;
-                  const eligibilityFromSummary =
-                    summary.eligibility && summary.eligibility.length > 0
-                      ? summary.eligibility
-                      : match.eligibility;
-                  const deadlineFromSummary = summary.deadline?.trim() || match.deadline;
-                  const funderFromSummary = summary.funder?.trim() || match.funder;
-
+            // Merge Gemini summaries into match cards
+            const enrichedMatches: MatchCard[] = normalizedRaw
+              .map((match) => {
+                const summary = summariesByLink.get(normalizeLink(match.link) ?? '');
+                
+                // If no Gemini summary found, keep empty fields (no fallback to raw Perplexity data)
+                if (!summary) {
                   return {
                     ...match,
-                    amount: amountFromSummary,
-                    description: descriptionFromSummary,
-                    eligibility: eligibilityFromSummary,
-                    deadline: deadlineFromSummary,
-                    funder: funderFromSummary,
+                    description: '', // Empty - confirms Gemini didn't process this grant
+                    amount: '', // Empty - confirms Gemini didn't process this grant
                   };
-                })
-              );
+                }
+
+                // Extract data from Gemini summary
+                const amountFromSummary =
+                  summary.amount_display?.trim() ||
+                  formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
+                  '';
+
+                const descriptionFromSummary = summary.summary?.trim() || '';
+                const eligibilityFromSummary =
+                  summary.eligibility && summary.eligibility.length > 0
+                    ? summary.eligibility
+                    : ['See program link for eligibility details'];
+                const deadlineFromSummary = summary.deadline?.trim() || 'Rolling deadline';
+                const funderFromSummary = summary.funder?.trim() || match.funder;
+
+                return {
+                  ...match,
+                  amount: amountFromSummary,
+                  description: descriptionFromSummary,
+                  eligibility: eligibilityFromSummary,
+                  deadline: deadlineFromSummary,
+                  funder: funderFromSummary,
+                };
+              })
+              .filter(Boolean) as MatchCard[];
+
+            if (enrichedMatches.length) {
+              setMatches(enrichedMatches);
             }
+          } else {
+            // Gemini returned empty array - keep matches with empty fields (no fallback)
+            console.warn('Gemini returned no summaries. Keeping matches with empty description/amount fields.');
           }
         } catch (error) {
-          if (error instanceof Error) {
-            setGeminiError(error.message);
-          } else {
-            setGeminiError('An unexpected error occurred while summarizing matches.');
-          }
-        } finally {
-          setIsSummarizing(false);
+          // If Gemini fails, keep matches with empty fields (no fallback to raw Perplexity data)
+          console.error('Error summarizing grants with Gemini:', error);
+          // Matches already set with empty fields above, so no need to update
         }
       }
     } catch (error) {
@@ -322,7 +332,6 @@ export const Matches = () => {
       } else {
         setLoadError('An unexpected error occurred while finding matches.');
       }
-      setIsSummarizing(false);
     } finally {
       setIsLoadingMatches(false);
     }
@@ -408,18 +417,19 @@ export const Matches = () => {
       </div>
 
       <div className="space-y-4">
-        {visibleMatches.map((match, index) => {
+        {visibleMatches.map((match, _index) => {
+          const itemKey = `${match.id}-${_index}`;
           const appStatus = getApplicationStatus(match.id);
           const isProcessing = processingId === match.id;
 
           return (
             <div
-              key={match.id}
-              data-match-index={index}
+              key={itemKey}
+              data-match-index={_index}
               className="group bg-white rounded-xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300"
             >
               <div className="p-4">
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">
@@ -461,9 +471,11 @@ export const Matches = () => {
                       )}
                     </div>
 
-                    <p className="text-sm text-surface-600 mb-3 leading-relaxed">
-                      {match.description}
-                    </p>
+                    {match.description && (
+                      <p className="text-sm text-surface-600 mb-3 leading-relaxed">
+                        {match.description}
+                      </p>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                       <div className="bg-surface-50 rounded-lg p-2.5">
@@ -480,19 +492,21 @@ export const Matches = () => {
                         </div>
                       </div>
 
-                      <div className="bg-surface-50 rounded-lg p-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-accent-100 rounded-lg">
-                            <svg className="w-3.5 h-3.5 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="text-xs font-medium text-surface-500">Award Range</div>
-                            <div className="text-sm text-surface-900 font-semibold">{match.amount}</div>
+                      {match.amount && (
+                        <div className="bg-surface-50 rounded-lg p-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-accent-100 rounded-lg">
+                              <svg className="w-3.5 h-3.5 text-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-surface-500">Award Range</div>
+                              <div className="text-sm text-surface-900 font-semibold">{match.amount}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="bg-surface-50 rounded-lg p-2.5">
                         <div className="flex items-center gap-2">
@@ -580,69 +594,6 @@ export const Matches = () => {
           );
         })}
       </div>
-
-      {(geminiSummaries.length > 0 || isSummarizing || geminiError) && (
-        <div className="mt-6">
-          <div className="rounded-xl border border-primary-100 bg-white/90 p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-surface-900">Gemini Suggested Grant Links</h2>
-              {isSummarizing && (
-                <span className="text-xs font-medium text-primary-600">Summarizing...</span>
-              )}
-            </div>
-
-            {geminiError ? (
-              <p className="text-sm text-red-600">{geminiError}</p>
-            ) : geminiSummaries.length === 0 ? (
-              <p className="text-sm text-surface-600">
-                {isSummarizing ? 'Analyzing results...' : 'No additional grant links identified.'}
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {geminiSummaries.map((summary, index) => {
-                  const key = summary.link || `${summary.title}-${index}`;
-                  const eligibility = summary.eligibility?.slice(0, 3) ?? [];
-                  const amountDisplay =
-                    summary.amount_display?.trim() ||
-                    formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
-                    '';
-                  return (
-                    <li key={key} className="rounded-lg border border-surface-200 bg-surface-50 p-3">
-                      <div className="flex flex-col gap-1">
-                        {summary.link ? (
-                          <a
-                            href={summary.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-semibold text-primary-600 hover:underline"
-                          >
-                            {summary.title || summary.link}
-                          </a>
-                        ) : (
-                          <span className="text-sm font-semibold text-surface-700">{summary.title}</span>
-                        )}
-                        {amountDisplay && (
-                          <span className="text-xs font-medium text-surface-500">{amountDisplay}</span>
-                        )}
-                        {summary.summary && (
-                          <p className="text-sm text-surface-600">{summary.summary}</p>
-                        )}
-                        {eligibility.length > 0 && (
-                          <ul className="mt-1 list-disc pl-5 text-xs text-surface-500">
-                            {eligibility.map((item) => (
-                              <li key={item}>{item}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
 
       {visibleMatches.length === 0 && (
         <div className="text-center py-12">
