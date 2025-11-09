@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export const Signup = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     contactName: '',
     email: '',
@@ -10,20 +12,42 @@ export const Signup = () => {
     password: '',
     confirmPassword: '',
   });
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
-    
-    // TODO: Implement signup logic (e.g., call API)
-    console.log('Signup submitted:', formData);
-    
-    // Redirect to intake form after successful signup
-    navigate('/intake-form');
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { user, error } = await signUp(formData.email, formData.password);
+      
+      if (error) {
+        setError(error.message || 'Failed to create account');
+        setLoading(false);
+        return;
+      }
+
+      if (user) {
+        // Redirect to email verification page after successful signup
+        navigate('/verify-email');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -31,6 +55,8 @@ export const Signup = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   return (
@@ -47,7 +73,7 @@ export const Signup = () => {
       <div className="hidden sm:flex sm:w-1/2 relative items-center justify-center p-12">
         <div className="text-center max-w-lg">
           <div className="flex items-center justify-center mb-8">
-            <img src="/Logo.png" alt="Grantly Logo" className="w-16 h-16 object-contain" />
+            <img src="/assets/logo.png" alt="Grantly Logo" className="h-20 w-auto" />
           </div>
           <h1 className="text-5xl font-bold text-surface-900 civic-heading mb-6">
             Join Grantly
@@ -114,6 +140,17 @@ export const Signup = () => {
           {/* Form */}
           <div className="auth-form-container backdrop-blur-xl bg-white/70 rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {error}
+                  </div>
+                </div>
+              )}
+              
               {/* Contact Information */}
               <div className="space-y-3">
                 <h3 className="auth-section-header text-base font-semibold text-surface-800 mb-2">Primary Contact</h3>
@@ -196,9 +233,20 @@ export const Signup = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="auth-button w-full bg-gradient-to-r from-primary to-primary/90 text-white py-2.5 px-4 rounded-xl font-semibold text-sm hover:from-primary/90 hover:to-primary/80 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transform transition-all duration-200 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                disabled={loading}
+                className="auth-button w-full bg-gradient-to-r from-primary to-primary/90 text-white py-2.5 px-4 rounded-xl font-semibold text-sm hover:from-primary/90 hover:to-primary/80 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transform transition-all duration-200 hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Create Account
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Account...
+                  </div>
+                ) : (
+                  'Create Account'
+                )}
               </button>
             </form>
 

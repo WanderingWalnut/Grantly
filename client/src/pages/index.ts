@@ -1,5 +1,5 @@
 // Auth pages
-export { Login, Signup } from './auth';
+export { Login, Signup, VerifyEmail } from './auth';
 
 // Dashboard
 export { Dashboard } from './dashboard';

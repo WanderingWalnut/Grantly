@@ -2,6 +2,8 @@ fastapi
 uvicorn[standard]
 httpx
 python-dotenv
+supabase
+pydantic[email]
 pydantic
 sqlalchemy
 psycopg[binary]

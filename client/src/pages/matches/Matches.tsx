@@ -294,18 +294,21 @@ export const Matches = () => {
           const isProcessing = processingId === match.id;
 
           return (
-            <div
-              key={itemKey}
-              data-match-index={_index}
-              className="group bg-white rounded-xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300"
-            >
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">
-                        {match.title}
-                      </h3>
+          <div 
+            key={match.id} 
+            data-match-index={index}
+            className="group bg-white rounded-xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300"
+          >
+            <div className="p-4">
+              {/* Header with Match Score */}
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-bold text-surface-900 group-hover:text-primary-600 transition-colors duration-300">
+                      {match.title}
+                    </h3>
+                    
+                    {appStatus && (
                       <div className={`flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
                         match.matchPercentage >= 90 ? 'bg-green-100 text-green-700'
                           : match.matchPercentage >= 80 ? 'bg-accent-100 text-accent-700'
