@@ -50,13 +50,13 @@ cd ..
 echo "🔍 Checking environment configuration..."
 if [ ! -f "server/.env" ]; then
     echo "⚠️  Warning: server/.env not found"
-    echo "   Copy server/.env.example to server/.env and configure it"
+    echo "   Create server/.env and configure it"
     echo "   See SUPABASE_SETUP.md for instructions"
 fi
 
 if [ ! -f "client/.env" ]; then
     echo "⚠️  Warning: client/.env not found"
-    echo "   Copy client/.env.example to client/.env and configure it"
+    echo "   Create client/.env and configure it"
     echo "   See SUPABASE_SETUP.md for instructions"
 fi
 
@@ -65,9 +65,9 @@ echo "✅ Installation Complete!"
 echo ""
 echo "📚 Next Steps:"
 echo "1. Follow SUPABASE_SETUP.md to configure Supabase"
-echo "2. Copy and configure .env files:"
-echo "   - server/.env.example → server/.env"
-echo "   - client/.env.example → client/.env"
+echo "2. Configure environment files (see ENV_CONFIG.md):"
+echo "   - client/.env (all environment variables are here)"
+echo "   - server/.env (if needed)"
 echo "3. Run the backend: cd server && source venv/bin/activate && uvicorn app.main:app --reload"
 echo "4. Run the frontend: cd client && npm run dev"
 echo ""

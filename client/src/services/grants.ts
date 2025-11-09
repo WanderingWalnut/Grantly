@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8001';
+import { API_BASE_URL } from '../config/env';
 
 export interface GrantSearchFilters {
   province?: string;
@@ -84,8 +84,8 @@ export function buildDefaultGrantSearchRequest(): GrantSearchRequest {
     },
     filters: {
       province: 'AB',
-      min_amount: 25000,
-      max_results: 3,
+      min_amount: 10000,  // Lowered from 25000 to get more results
+      max_results: 10,     // Increased from 3 to 10
     },
   };
 }

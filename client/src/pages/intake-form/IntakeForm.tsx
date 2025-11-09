@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOrganization } from '../../context/OrganizationContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../../config/env';
 
 export const IntakeForm = () => {
   const navigate = useNavigate();
@@ -307,8 +306,10 @@ export const IntakeForm = () => {
                         <option value="">Select structure</option>
                         <option value="sole proprietorship">Sole Proprietorship</option>
                         <option value="partnership">Partnership</option>
-                        <option value="llc">LLC</option>
                         <option value="corporation">Corporation</option>
+                        <option value="nonprofit">Non-profit / Charity</option>
+                        <option value="cooperative">Cooperative</option>
+                        <option value="other">Other</option>
                       </select>
                       <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                         <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

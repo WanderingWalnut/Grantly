@@ -17,7 +17,7 @@ def get_supabase_client() -> Client:
     
     Environment variables required:
     - SUPABASE_URL: Your Supabase project URL
-    - SUPABASE_KEY: Your Supabase anon/public key
+    - SUPABASE_ANON_KEY: Your Supabase anon/public key
     
     Returns:
         Client: Initialized Supabase client
@@ -30,7 +30,8 @@ def get_supabase_client() -> Client:
     
     if not supabase_url or not supabase_key:
         raise ValueError(
-            "SUPABASE_URL and SUPABASE_KEY must be set in environment variables"
+            "SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables. "
+            "Create a .env file in the server directory with these values."
         )
     
     return create_client(supabase_url, supabase_key)
