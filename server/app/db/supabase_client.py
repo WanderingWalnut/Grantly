@@ -6,10 +6,8 @@ from pathlib import Path
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# Load .env file from server directory (parent of app directory)
-server_dir = Path(__file__).parent.parent.parent
-env_path = server_dir / '.env'
-load_dotenv(dotenv_path=env_path)
+# Always load the server-level .env so the reloader process sees required vars.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 @lru_cache(maxsize=1)
