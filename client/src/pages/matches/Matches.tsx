@@ -143,9 +143,11 @@ export const Matches = () => {
     setMatches([]); // Clear previous matches
 
     try {
-      // Step 1: Fetch grants from Perplexity
+      // Step 1: Fetch grants from backend (mock data with 10 grants)
       const payload = buildDefaultGrantSearchRequest();
       const response = await searchGrants(payload);
+      
+      console.log(`📦 Backend returned ${response.results.length} grants (mode: ${response.mode})`);
 
       // Step 2: Immediately process with Gemini (filter duplicates and create descriptions)
       // Don't show anything until Gemini is done

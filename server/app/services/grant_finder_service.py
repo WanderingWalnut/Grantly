@@ -43,7 +43,28 @@ class GrantFinderService:
     ) -> list[Grant]:
         """Return mock data stored on disk for quick iteration."""
         grants = list(_load_mock_grants())
+        
+        print(f"\n=== MOCK MODE GRANT MATCHING ===")
+        print(f"Total grants loaded: {len(grants)}")
+        print(f"Organization profile:")
+        print(f"  - Legal name: {organization.legal_name}")
+        print(f"  - Structure: {organization.org_structure}")
+        print(f"  - Sector tags: {organization.sector_tags}")
+        print(f"  - Province: {organization.address.province if organization.address else 'N/A'}")
+        print(f"Filters:")
+        if filters:
+            print(f"  - Province: {filters.province}")
+            print(f"  - Min amount: {filters.min_amount}")
+            print(f"  - Max results: {filters.max_results}")
+        else:
+            print(f"  - No filters applied")
+        
         grants = self._apply_filters(grants, filters, organization)
+        
+        print(f"After filtering: {len(grants)} grants")
+        for i, grant in enumerate(grants[:5]):
+            print(f"  {i+1}. {grant.title} (tags: {grant.tags})")
+        print(f"=================================\n")
 
         max_results = filters.max_results if filters and filters.max_results else 10
         return grants[:max_results]
@@ -75,30 +96,35 @@ class GrantFinderService:
         self,
         grants: Iterable[Grant],
         filters: Optional[GrantFilters],
-        _organization: OrganizationInfo,
+        organization: OrganizationInfo,
     ) -> list[Grant]:
         """
-        Apply simple filtering that works for both mock and live output.
+        Apply filtering based on filters and organization profile.
+        Matches grants to organization's sector and location.
         """
-        if not filters:
-            return list(grants)
-
         filtered: list[Grant] = []
         for grant in grants:
-            if filters.province and not _matches_province(grant, filters.province):
+            # Apply geographic filters
+            if filters and filters.province and not _matches_province(grant, filters.province):
                 continue
 
-            if filters.deadline_before and not _before_deadline(
+            # Apply deadline filters
+            if filters and filters.deadline_before and not _before_deadline(
                 grant, filters.deadline_before
             ):
                 continue
 
-            if filters.min_amount is not None and not _meets_min_amount(
+            # Apply minimum amount filters
+            if filters and filters.min_amount is not None and not _meets_min_amount(
                 grant, filters.min_amount
             ):
                 continue
 
             filtered.append(grant)
+
+        # Sort by relevance to organization's sector (best matches first)
+        if organization.sector_tags:
+            filtered = _sort_by_sector_relevance(filtered, organization.sector_tags)
 
         return filtered
 
@@ -197,8 +223,9 @@ class GrantFinderService:
             # Keep it concise; NAICS or legal name can be too specific and miss pages
             queries.append(" ".join(p for p in parts if p))
 
-        # Limit to max_results number of queries to keep the call efficient
-        return queries[: max_results if max_results > 0 else 3]
+        # Perplexity API has a hard limit of 5 queries maximum
+        # Return at most 5 queries (we have 6 program seeds)
+        return queries[:5]
 
 
 @lru_cache(maxsize=1)
@@ -301,5 +328,54 @@ def _meets_min_amount(grant: Grant, min_amount: int) -> bool:
     if not available_amounts:
         return True
     return max(available_amounts) >= min_amount
+
+
+def _sort_by_sector_relevance(grants: list[Grant], sector_tags: list[str]) -> list[Grant]:
+    """
+    Sort grants by relevance to organization's sector tags.
+    Grants with matching tags appear first.
+    """
+    if not sector_tags:
+        return grants
+    
+    sector_tags_lower = [tag.lower() for tag in sector_tags]
+    
+    def relevance_score(grant: Grant) -> int:
+        """Calculate relevance score based on matching sectors/tags."""
+        score = 0
+        
+        # Check grant tags
+        if grant.tags:
+            grant_tags_lower = [tag.lower() for tag in grant.tags]
+            for sector_tag in sector_tags_lower:
+                for grant_tag in grant_tags_lower:
+                    if sector_tag in grant_tag or grant_tag in sector_tag:
+                        score += 3
+        
+        # Check grant title
+        if grant.title:
+            title_lower = grant.title.lower()
+            for sector_tag in sector_tags_lower:
+                if sector_tag in title_lower:
+                    score += 2
+        
+        # Check grant summary
+        if grant.summary:
+            summary_lower = grant.summary.lower()
+            for sector_tag in sector_tags_lower:
+                if sector_tag in summary_lower:
+                    score += 1
+        
+        # Check grant program
+        if grant.program:
+            program_lower = grant.program.lower()
+            for sector_tag in sector_tags_lower:
+                if sector_tag in program_lower:
+                    score += 2
+        
+        return score
+    
+    # Sort by relevance score (descending)
+    return sorted(grants, key=relevance_score, reverse=True)
 
 
