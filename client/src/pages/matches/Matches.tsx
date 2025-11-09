@@ -4,8 +4,6 @@ import {
   buildDefaultGrantSearchRequest,
   searchGrants,
   summarizeGrantResultsWithGemini,
-  type GeminiSummarizedGrant,
-  type GrantSearchResult,
 } from '../../services';
 
 type MatchCard = {
@@ -35,58 +33,6 @@ const hashStringToPositiveInt = (value: string): number => {
   return Math.abs(hash);
 };
 
-const formatAmountRange = (grant: GrantSearchResult): string | null => {
-  const { amount_min: minAmount, amount_max: maxAmount } = grant;
-
-  if (minAmount != null && maxAmount != null) {
-    return `${currencyFormatter.format(minAmount)} - ${currencyFormatter.format(maxAmount)}`;
-  }
-
-  if (maxAmount != null) {
-    return `Up to ${currencyFormatter.format(maxAmount)}`;
-  }
-
-  if (minAmount != null) {
-    return `Minimum ${currencyFormatter.format(minAmount)}`;
-  }
-
-  return null;
-};
-
-const formatDeadline = (deadline?: string | null): string => {
-  if (!deadline) {
-    return 'Rolling deadline';
-  }
-
-  const parsed = new Date(deadline);
-  if (Number.isNaN(parsed.getTime())) {
-    return deadline;
-  }
-
-  return parsed.toLocaleDateString('en-CA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const parseEligibility = (eligibility?: string | null): string[] => {
-  if (!eligibility) {
-    return ['See program link for eligibility details'];
-  }
-
-  const tokens = eligibility
-    .split(/[\n•\-]+/g)
-    .map(token => token.trim())
-    .filter(Boolean);
-
-  if (tokens.length === 0) {
-    return ['See program link for eligibility details'];
-  }
-
-  return [...new Set(tokens)];
-};
-
 const formatAmountFromNumbers = (min: number | null | undefined, max: number | null | undefined): string | null => {
   if (min == null && max == null) {
     return null;
@@ -108,51 +54,6 @@ const formatAmountFromNumbers = (min: number | null | undefined, max: number | n
   }
 
   return null;
-};
-
-const normalizeLink = (value: string | undefined | null): string | null => {
-  if (!value) return null;
-  try {
-    const parsed = new URL(value);
-    const normalizedPath = parsed.pathname.replace(/\/+$/, '');
-    return `${parsed.origin}${normalizedPath}`;
-  } catch {
-    return value.trim().replace(/\/+$/, '');
-  }
-};
-
-const mapGrantToMatch = (grant: GrantSearchResult, index: number): MatchCard | null => {
-  if (!grant.title) return null;
-  const link = grant.link;
-  if (!link) return null;
-
-  const amount =
-    formatAmountRange(grant) ?? '';
-
-  let funder = grant.sponsor;
-  if (!funder) {
-    if (link.includes('alberta.ca')) {
-      funder = 'Government of Alberta';
-    } else if (link.includes('.gc.ca') || link.includes('canada.ca')) {
-      funder = 'Government of Canada';
-    } else {
-      funder = 'Program Sponsor';
-    }
-  }
-
-  const description = grant.summary ?? '';
-
-  return {
-    id: hashStringToPositiveInt(`${link}-${index}`),
-    title: grant.title,
-    funder,
-    amount,
-    deadline: formatDeadline(grant.deadline),
-    matchPercentage: 70 + ((index * 7) % 25),
-    description,
-    eligibility: parseEligibility(grant.eligibility),
-    link,
-  };
 };
 
 export const Matches = () => {
@@ -239,92 +140,61 @@ export const Matches = () => {
   const handleFindMatches = async () => {
     setIsLoadingMatches(true);
     setLoadError(null);
+    setMatches([]); // Clear previous matches
 
     try {
+      // Step 1: Fetch grants from Perplexity
       const payload = buildDefaultGrantSearchRequest();
       const response = await searchGrants(payload);
-      
-      // Create initial match cards with empty Gemini fields (will be populated if Gemini succeeds)
-      const normalizedRaw = response.results
-        .map((grant, index) => mapGrantToMatch(grant, index))
-        .filter((match): match is MatchCard => match !== null);
 
-      // Initialize matches with empty description/amount to confirm Gemini is working
-      const initialMatches: MatchCard[] = normalizedRaw.map((match) => ({
-        ...match,
-        description: '', // Empty until Gemini populates
-        amount: '', // Empty until Gemini populates
-      }));
+      // Step 2: Immediately process with Gemini (filter duplicates and create descriptions)
+      // Don't show anything until Gemini is done
+      if (response.results.length === 0) {
+        setMatches([]);
+        return;
+      }
 
-      setMatches(initialMatches);
-      setVisibleCount(3);
-      setProcessingId(null);
+      try {
+        const summaries = await summarizeGrantResultsWithGemini(response.results);
 
-      // Process with Gemini after fetching Perplexity results
-      if (response.results.length > 0) {
-        try {
-          const summaries = await summarizeGrantResultsWithGemini(response.results);
+        // Step 3: Only show Gemini-processed results (already deduplicated and enriched)
+        if (summaries.length > 0) {
+          const matchCards: MatchCard[] = summaries.map((summary, index) => {
+            const amount =
+              summary.amount_display?.trim() ||
+              formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
+              '';
 
-          if (summaries.length) {
-            const summariesByLink = new Map<string, GeminiSummarizedGrant>();
-            summaries.forEach((summary) => {
-              const normalizedLink = normalizeLink(summary.link);
-              if (normalizedLink) {
-                summariesByLink.set(normalizedLink, summary);
-              }
-            });
+            const funder = summary.funder?.trim() || 'Program Sponsor';
 
-            // Merge Gemini summaries into match cards
-            const enrichedMatches: MatchCard[] = normalizedRaw
-              .map((match) => {
-                const summary = summariesByLink.get(normalizeLink(match.link) ?? '');
-                
-                // If no Gemini summary found, keep empty fields (no fallback to raw Perplexity data)
-                if (!summary) {
-                  return {
-                    ...match,
-                    description: '', // Empty - confirms Gemini didn't process this grant
-                    amount: '', // Empty - confirms Gemini didn't process this grant
-                  };
-                }
+            return {
+              id: hashStringToPositiveInt(`${summary.link}-${index}`),
+              title: summary.title,
+              funder,
+              amount,
+              deadline: summary.deadline?.trim() || 'Rolling deadline',
+              matchPercentage: 70 + ((index * 7) % 25),
+              description: summary.summary?.trim() || '',
+              eligibility:
+                summary.eligibility && summary.eligibility.length > 0
+                  ? summary.eligibility
+                  : ['See program link for eligibility details'],
+              link: summary.link,
+            };
+          });
 
-                // Extract data from Gemini summary
-                const amountFromSummary =
-                  summary.amount_display?.trim() ||
-                  formatAmountFromNumbers(summary.amount_min, summary.amount_max) ||
-                  '';
-
-                const descriptionFromSummary = summary.summary?.trim() || '';
-                const eligibilityFromSummary =
-                  summary.eligibility && summary.eligibility.length > 0
-                    ? summary.eligibility
-                    : ['See program link for eligibility details'];
-                const deadlineFromSummary = summary.deadline?.trim() || 'Rolling deadline';
-                const funderFromSummary = summary.funder?.trim() || match.funder;
-
-                return {
-                  ...match,
-                  amount: amountFromSummary,
-                  description: descriptionFromSummary,
-                  eligibility: eligibilityFromSummary,
-                  deadline: deadlineFromSummary,
-                  funder: funderFromSummary,
-                };
-              })
-              .filter(Boolean) as MatchCard[];
-
-            if (enrichedMatches.length) {
-              setMatches(enrichedMatches);
-            }
-          } else {
-            // Gemini returned empty array - keep matches with empty fields (no fallback)
-            console.warn('Gemini returned no summaries. Keeping matches with empty description/amount fields.');
-          }
-        } catch (error) {
-          // If Gemini fails, keep matches with empty fields (no fallback to raw Perplexity data)
-          console.error('Error summarizing grants with Gemini:', error);
-          // Matches already set with empty fields above, so no need to update
+          setMatches(matchCards);
+          setVisibleCount(3);
+        } else {
+          // Gemini returned empty array - no matches to show
+          setMatches([]);
+          console.warn('Gemini returned no summaries after filtering duplicates.');
         }
+      } catch (error) {
+        // If Gemini fails, show no matches (raw Perplexity data never displayed)
+        console.error('Error processing grants with Gemini:', error);
+        setMatches([]);
+        setLoadError('Failed to process grant results. Please try again.');
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -332,6 +202,7 @@ export const Matches = () => {
       } else {
         setLoadError('An unexpected error occurred while finding matches.');
       }
+      setMatches([]);
     } finally {
       setIsLoadingMatches(false);
     }
